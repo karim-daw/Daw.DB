@@ -16,5 +16,9 @@ namespace DynamicEntitiesApp.Interfaces
         void AddDynamicRecord(string entityName, Dictionary<string, object> record);
         List<Dictionary<string, object>> GetDynamicRecords(string entityName);
         void UpdateDynamicSchema(string entityName, Dictionary<string, string> newFields);
+
+        // New methods for handling relationships
+        void CreateOneToManyRelation(string parentEntity, string childEntity, string foreignKey);
+        void CreateManyToManyRelation(string firstEntity, string secondEntity, string relationTable, Dictionary<string, string> relationTableFields);
     }
 }

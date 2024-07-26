@@ -53,8 +53,19 @@ namespace DynamicEntitiesApp
             AddEntityIfNotExists("customer_order", new Dictionary<string, string>
             {
                 { "orderNumber", "TEXT" },
-                { "date", "TEXT" }
+                { "date", "TEXT" },
+                { "customer_id", "INTEGER" }
             });
+
+            _dataService.CreateOneToManyRelation("customer", "customer_order", "customer_id");
+
+            AddEntityIfNotExists("order_product", new Dictionary<string, string>
+            {
+                { "order_id", "INTEGER" },
+                { "product_id", "INTEGER" }
+            });
+
+            _dataService.CreateManyToManyRelation("customer_order", "product", "order_product", new Dictionary<string, string>());
 
             AddDynamicRecord("customer", new Dictionary<string, object>
             {
@@ -71,7 +82,14 @@ namespace DynamicEntitiesApp
             AddDynamicRecord("customer_order", new Dictionary<string, object>
             {
                 { "orderNumber", "A123" },
-                { "date", "2024-07-26" }
+                { "date", "2024-07-26" },
+                { "customer_id", 1 }
+            });
+
+            AddDynamicRecord("order_product", new Dictionary<string, object>
+            {
+                { "order_id", 1 },
+                { "product_id", 1 }
             });
 
             Console.WriteLine("Fetching records from 'customer' entity...");
@@ -83,6 +101,9 @@ namespace DynamicEntitiesApp
             Console.WriteLine("Fetching records from 'customer_order' entity...");
             DisplayRecords(_dataService.GetDynamicRecords("customer_order"));
 
+            Console.WriteLine("Fetching records from 'order_product' entity...");
+            DisplayRecords(_dataService.GetDynamicRecords("order_product"));
+
             Console.WriteLine("Updating schema of 'customer_order' entity...");
             _dataService.UpdateDynamicSchema("customer_order", new Dictionary<string, string>
             {
@@ -93,7 +114,8 @@ namespace DynamicEntitiesApp
             {
                 { "orderNumber", "B456" },
                 { "date", "2024-07-27" },
-                { "customerName", "Bob" }
+                { "customerName", "Bob" },
+                { "customer_id", 1 }
             });
 
             Console.WriteLine("Fetching updated records from 'customer_order' entity...");

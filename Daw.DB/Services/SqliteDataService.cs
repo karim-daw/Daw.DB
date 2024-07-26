@@ -17,11 +17,6 @@ namespace DynamicEntitiesApp.Services
             connection.Open();
         }
 
-        /// <summary>
-        /// Creates a new entity in the database if it does not already exist
-        /// </summary>
-        /// <param name="entityName"></param>
-        /// <param name="entityFields"></param>
         public void CreateEntity(string entityName, Dictionary<string, string> entityFields)
         {
             if (!EntityExists(entityName))
@@ -35,11 +30,6 @@ namespace DynamicEntitiesApp.Services
             }
         }
 
-        /// <summary>
-        /// Adds a new record to the specified entity
-        /// </summary>
-        /// <param name="entityName"></param>
-        /// <param name="record"></param>
         public void AddRecord(string entityName, Dictionary<string, object> record)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -56,11 +46,6 @@ namespace DynamicEntitiesApp.Services
             command.ExecuteNonQuery();
         }
 
-        /// <summary>
-        /// Retrieves all records from the specified entity
-        /// </summary>
-        /// <param name="entityName"></param>
-        /// <returns></returns>
         public List<Dictionary<string, object>> GetRecords(string entityName)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -84,12 +69,6 @@ namespace DynamicEntitiesApp.Services
             return records;
         }
 
-
-        /// <summary>
-        /// Updates the schema of the specified entity
-        /// </summary>
-        /// <param name="entityName"></param>
-        /// <param name="newFields"></param>
         public void UpdateSchema(string entityName, Dictionary<string, string> newFields)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -105,13 +84,6 @@ namespace DynamicEntitiesApp.Services
             }
         }
 
-        /// <summary>
-        /// Checks if a column exists in the specified table
-        /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="tableName"></param>
-        /// <param name="columnName"></param>
-        /// <returns></returns>
         private bool ColumnExists(SqliteConnection connection, string tableName, string columnName)
         {
             var command = connection.CreateCommand();
@@ -127,12 +99,6 @@ namespace DynamicEntitiesApp.Services
             return false;
         }
 
-
-        /// <summary>
-        /// Checks if the specified entity exists in the database
-        /// </summary>
-        /// <param name="entityName"></param>
-        /// <returns></returns>
         public bool EntityExists(string entityName)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -144,46 +110,45 @@ namespace DynamicEntitiesApp.Services
             return count > 0;
         }
 
-
-        /// <summary>
-        /// Creates a new entity with the specified fields
-        /// </summary>
-        /// <param name="entityName"></param>
-        /// <param name="fields"></param>
         public void CreateDynamicEntity(string entityName, Dictionary<string, string> fields)
         {
             CreateEntity(entityName, fields);
         }
 
-        /// <summary>
-        /// Adds a new record to the specified entity
-        /// </summary>
-        /// <param name="entityName"></param>
-        /// <param name="record"></param>
         public void AddDynamicRecord(string entityName, Dictionary<string, object> record)
         {
             AddRecord(entityName, record);
         }
 
-
-        /// <summary>
-        /// Retrieves all records from the specified entity
-        /// </summary>
-        /// <param name="entityName"></param>
-        /// <returns></returns>
         public List<Dictionary<string, object>> GetDynamicRecords(string entityName)
         {
             return GetRecords(entityName);
         }
 
-        /// <summary>
-        /// Updates the schema of the specified entity
-        /// </summary>
-        /// <param name="entityName"></param>
-        /// <param name="newFields"></param>
         public void UpdateDynamicSchema(string entityName, Dictionary<string, string> newFields)
         {
             UpdateSchema(entityName, newFields);
+        }
+
+        public void CreateOneToManyRelation(string parentEntity, string childEntity, string foreignKey)
+        {
+            var childFields = new Dictionary<string, string>
+            {
+                { foreignKey, $"INTEGER, FOREIGN KEY({foreignKey}) REFERENCES {parentEntity}(id)" }
+            };
+            UpdateSchema(childEntity, childFields);
+        }
+
+        public void CreateManyToManyRelation(string firstEntity, string secondEntity, string relationTable, Dictionary<string, string> relationTableFields)
+        {
+            var fields = new Dictionary<string, string>(relationTableFields)
+            {
+                { $"{firstEntity}_id", "INTEGER" },
+                { $"{secondEntity}_id", "INTEGER" },
+                { $"FOREIGN KEY ({firstEntity}_id)", $"REFERENCES [{firstEntity}](id)" },
+                { $"FOREIGN KEY ({secondEntity}_id)", $"REFERENCES [{secondEntity}](id)" }
+            };
+            CreateEntity(relationTable, fields);
         }
     }
 }
