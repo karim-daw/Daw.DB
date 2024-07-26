@@ -3,8 +3,6 @@ using DynamicEntitiesApp.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace DynamicEntitiesApp
 {
@@ -16,6 +14,7 @@ namespace DynamicEntitiesApp
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton<IDataService, SqliteDataService>();
+                    services.AddTransient<DatabaseApi>();
                     services.AddTransient<App>();
                 })
                 .Build();
@@ -27,106 +26,101 @@ namespace DynamicEntitiesApp
 
     public class App
     {
-        private readonly IDataService _dataService;
+        private readonly DatabaseApi _databaseApi;
 
-        public App(IDataService dataService)
+        public App(DatabaseApi databaseApi)
         {
-            _dataService = dataService;
+            _databaseApi = databaseApi;
         }
 
         public void Run()
         {
-            _dataService.CreateDatabase("DynamicEntities");
+            _databaseApi.InitializeDatabase("DynamicEntities");
 
-            AddEntityIfNotExists("customer", new Dictionary<string, string>
+            _databaseApi.CreateEntity("customer", new Dictionary<string, string>
             {
                 { "name", "TEXT" },
                 { "age", "INTEGER" }
             });
 
-            AddEntityIfNotExists("product", new Dictionary<string, string>
+            _databaseApi.CreateEntity("product", new Dictionary<string, string>
             {
                 { "name", "TEXT" },
                 { "price", "REAL" }
             });
 
-            AddEntityIfNotExists("customer_order", new Dictionary<string, string>
+            _databaseApi.CreateEntity("customer_order", new Dictionary<string, string>
             {
                 { "orderNumber", "TEXT" },
-                { "date", "TEXT" }
+                { "date", "TEXT" },
+                { "customer_id", "INTEGER" }
             });
 
-            AddDynamicRecord("customer", new Dictionary<string, object>
+            _databaseApi.CreateOneToManyRelation("customer", "customer_order", "customer_id");
+
+            _databaseApi.CreateEntity("order_product", new Dictionary<string, string>
+            {
+                { "order_id", "INTEGER" },
+                { "product_id", "INTEGER" }
+            });
+
+            _databaseApi.CreateManyToManyRelation("customer_order", "product", "order_product", new Dictionary<string, string>());
+
+            _databaseApi.AddRecord("customer", new Dictionary<string, object>
             {
                 { "name", "Alice" },
                 { "age", 30 }
             });
 
-            AddDynamicRecord("product", new Dictionary<string, object>
+            _databaseApi.AddRecord("product", new Dictionary<string, object>
             {
                 { "name", "Laptop" },
                 { "price", 999.99m }
             });
 
-            AddDynamicRecord("customer_order", new Dictionary<string, object>
+            _databaseApi.AddRecord("customer_order", new Dictionary<string, object>
             {
                 { "orderNumber", "A123" },
-                { "date", "2024-07-26" }
+                { "date", "2024-07-26" },
+                { "customer_id", 1 }
+            });
+
+            _databaseApi.AddRecord("order_product", new Dictionary<string, object>
+            {
+                { "order_id", 1 },
+                { "product_id", 1 }
             });
 
             Console.WriteLine("Fetching records from 'customer' entity...");
-            DisplayRecords(_dataService.GetDynamicRecords("customer"));
+            _databaseApi.DisplayRecords("customer");
 
             Console.WriteLine("Fetching records from 'product' entity...");
-            DisplayRecords(_dataService.GetDynamicRecords("product"));
+            _databaseApi.DisplayRecords("product");
 
             Console.WriteLine("Fetching records from 'customer_order' entity...");
-            DisplayRecords(_dataService.GetDynamicRecords("customer_order"));
+            _databaseApi.DisplayRecords("customer_order");
+
+            Console.WriteLine("Fetching records from 'order_product' entity...");
+            _databaseApi.DisplayRecords("order_product");
 
             Console.WriteLine("Updating schema of 'customer_order' entity...");
-            _dataService.UpdateDynamicSchema("customer_order", new Dictionary<string, string>
+            _databaseApi.UpdateSchema("customer_order", new Dictionary<string, string>
             {
                 { "customerName", "TEXT" }
             });
 
-            AddDynamicRecord("customer_order", new Dictionary<string, object>
+            _databaseApi.AddRecord("customer_order", new Dictionary<string, object>
             {
                 { "orderNumber", "B456" },
                 { "date", "2024-07-27" },
-                { "customerName", "Bob" }
+                { "customerName", "Bob" },
+                { "customer_id", 1 }
             });
 
             Console.WriteLine("Fetching updated records from 'customer_order' entity...");
-            DisplayRecords(_dataService.GetDynamicRecords("customer_order"));
+            _databaseApi.DisplayRecords("customer_order");
 
             Console.WriteLine("Done.");
-        }
-
-        private void AddEntityIfNotExists(string entityName, Dictionary<string, string> fields)
-        {
-            if (!_dataService.EntityExists(entityName))
-            {
-                _dataService.CreateDynamicEntity(entityName, fields);
-                Console.WriteLine($"Created entity '{entityName}'");
-            }
-            else
-            {
-                Console.WriteLine($"Entity '{entityName}' already exists");
-            }
-        }
-
-        private void AddDynamicRecord(string entityName, Dictionary<string, object> record)
-        {
-            Console.WriteLine($"Adding a record to '{entityName}' entity...");
-            _dataService.AddDynamicRecord(entityName, record);
-        }
-
-        private void DisplayRecords(List<Dictionary<string, object>> records)
-        {
-            foreach (var record in records)
-            {
-                Console.WriteLine(string.Join(", ", record.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
-            }
         }
     }
 }
