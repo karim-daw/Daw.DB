@@ -44,6 +44,7 @@
 /Users/karimdaw/Daw.DB/Daw.DB/obj/Debug/net8.0/Daw.DB.AssemblyInfo.cs
 /Users/karimdaw/Daw.DB/Daw.DB/obj/Debug/net8.0/Daw.DB.csproj.CoreCompileInputs.cache
 /Users/karimdaw/Daw.DB/Daw.DB/obj/Debug/net8.0/Daw.DB.MvcApplicationPartsAssemblyInfo.cache
+/Users/karimdaw/Daw.DB/Daw.DB/obj/Debug/net8.0/Daw.DB.sourcelink.json
 /Users/karimdaw/Daw.DB/Daw.DB/obj/Debug/net8.0/staticwebassets.build.json
 /Users/karimdaw/Daw.DB/Daw.DB/obj/Debug/net8.0/staticwebassets.development.json
 /Users/karimdaw/Daw.DB/Daw.DB/obj/Debug/net8.0/staticwebassets/msbuild.Daw.DB.Microsoft.AspNetCore.StaticWebAssets.props

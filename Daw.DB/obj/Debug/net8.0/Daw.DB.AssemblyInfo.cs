@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Daw.DB")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6085f022aadffcf3fbd214c451d6cfb072095145")]
 [assembly: System.Reflection.AssemblyProductAttribute("Daw.DB")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Daw.DB")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
