@@ -17,6 +17,11 @@ namespace DynamicEntitiesApp.Services
             connection.Open();
         }
 
+        /// <summary>
+        /// Creates a new entity in the database if it does not already exist
+        /// </summary>
+        /// <param name="entityName"></param>
+        /// <param name="entityFields"></param>
         public void CreateEntity(string entityName, Dictionary<string, string> entityFields)
         {
             if (!EntityExists(entityName))
@@ -30,6 +35,11 @@ namespace DynamicEntitiesApp.Services
             }
         }
 
+        /// <summary>
+        /// Adds a new record to the specified entity
+        /// </summary>
+        /// <param name="entityName"></param>
+        /// <param name="record"></param>
         public void AddRecord(string entityName, Dictionary<string, object> record)
         {
             using var connection = new SqliteConnection(_connectionString);
