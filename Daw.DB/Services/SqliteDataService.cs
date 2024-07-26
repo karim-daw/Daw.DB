@@ -110,26 +110,6 @@ namespace DynamicEntitiesApp.Services
             return count > 0;
         }
 
-        public void CreateDynamicEntity(string entityName, Dictionary<string, string> fields)
-        {
-            CreateEntity(entityName, fields);
-        }
-
-        public void AddDynamicRecord(string entityName, Dictionary<string, object> record)
-        {
-            AddRecord(entityName, record);
-        }
-
-        public List<Dictionary<string, object>> GetDynamicRecords(string entityName)
-        {
-            return GetRecords(entityName);
-        }
-
-        public void UpdateDynamicSchema(string entityName, Dictionary<string, string> newFields)
-        {
-            UpdateSchema(entityName, newFields);
-        }
-
         public void CreateOneToManyRelation(string parentEntity, string childEntity, string foreignKey)
         {
             var childFields = new Dictionary<string, string>
