@@ -1,5 +1,6 @@
-using DynamicEntitiesApp.Interfaces;
-using DynamicEntitiesApp.Services;
+using Daw.DB;
+using Daw.DB.Interfaces;
+using Daw.DB.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -14,7 +15,9 @@ namespace DynamicEntitiesApp
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton<IDataService, SqliteDataService>();
-                    services.AddTransient<DatabaseApi>();
+                    services.AddSingleton<IEntityService, EntityService>();
+                    services.AddSingleton<IRecordService, RecordService>();
+                    services.AddTransient<DataApi>();
                     services.AddTransient<App>();
                 })
                 .Build();
@@ -26,9 +29,9 @@ namespace DynamicEntitiesApp
 
     public class App
     {
-        private readonly DatabaseApi _databaseApi;
+        private readonly DataApi _databaseApi;
 
-        public App(DatabaseApi databaseApi)
+        public App(DataApi databaseApi)
         {
             _databaseApi = databaseApi;
         }
