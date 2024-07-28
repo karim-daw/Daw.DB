@@ -9,14 +9,12 @@ namespace Daw.DB.Services
 {
     public class EntityService : IEntityService
     {
-        private readonly IDataService _dataService;
-        private readonly string _connectionString;
         private readonly ILogger<EntityService> _logger;
+        private readonly IDataService _dataService;
 
         public EntityService(IDataService dataService, ILogger<EntityService> logger)
         {
             _dataService = dataService;
-            _connectionString = _dataService.GetConnectionString();
             _logger = logger;
         }
 
@@ -28,7 +26,7 @@ namespace Daw.DB.Services
             {
                 _logger.LogInformation("Entity does not exist. Creating new entity: {EntityName}", entityName);
 
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = _dataService.GetConnection();
                 connection.Open();
                 var command = connection.CreateCommand();
                 var fields = string.Join(", ", entityFields.Select(f => $"{f.Key} {f.Value}"));
@@ -50,6 +48,8 @@ namespace Daw.DB.Services
             }
         }
 
+
+
         public void CreateManyToManyRelation(string firstEntity, string secondEntity, string relationTable, Dictionary<string, string> relationTableFields)
         {
             _logger.LogInformation("Attempting to create many-to-many relation: {RelationTable}", relationTable);
@@ -64,6 +64,8 @@ namespace Daw.DB.Services
             CreateEntity(relationTable, fields);
         }
 
+
+
         public void CreateOneToManyRelation(string parentEntity, string childEntity, string foreignKey)
         {
             _logger.LogInformation("Attempting to create one-to-many relation from {ParentEntity} to {ChildEntity}", parentEntity, childEntity);
@@ -75,11 +77,13 @@ namespace Daw.DB.Services
             UpdateSchema(childEntity, childFields);
         }
 
+
+
         public void DeleteEntity(string entityName)
         {
             _logger.LogInformation("Attempting to delete entity: {EntityName}", entityName);
 
-            using var connection = new SqliteConnection(_connectionString);
+            using var connection = _dataService.GetConnection();
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = $"DROP TABLE IF EXISTS [{entityName}]";
@@ -95,11 +99,13 @@ namespace Daw.DB.Services
             }
         }
 
+
+
         public bool EntityExists(string entityName)
         {
             _logger.LogInformation("Checking if entity exists: {EntityName}", entityName);
 
-            using var connection = new SqliteConnection(_connectionString);
+            using var connection = _dataService.GetConnection();
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = $"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=@entityName";
@@ -118,19 +124,19 @@ namespace Daw.DB.Services
             }
         }
 
+
         public void UpdateSchema(string entityName, Dictionary<string, string> newFields)
         {
             _logger.LogInformation("Attempting to update schema for entity: {EntityName}", entityName);
 
-            using var connection = new SqliteConnection(_connectionString);
+            using var connection = _dataService.GetConnection();
             connection.Open();
             foreach (var field in newFields)
             {
-                if (!SqliteDataService.ColumnExists(connection, entityName, field.Key))
+                if (!_dataService.ColumnExists(entityName, field.Key))
                 {
                     var command = connection.CreateCommand();
                     command.CommandText = $"ALTER TABLE [{entityName}] ADD COLUMN {field.Key} {field.Value}";
-
                     try
                     {
                         command.ExecuteNonQuery();

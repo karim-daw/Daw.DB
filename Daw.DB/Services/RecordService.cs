@@ -6,20 +6,21 @@ namespace Daw.DB.Services;
 public class RecordService : IRecordService
 {
 
-    // inject IEntityService
     private readonly IDataService _dataService;
+    private readonly ILogger<RecordService> _logger;
 
-    private readonly string _connectionString;
-
-    public RecordService(IDataService dataService)
+    public RecordService(IDataService dataService, ILogger<RecordService> logger)
     {
         _dataService = dataService;
-        _connectionString = _dataService.GetConnectionString();
+        _logger = logger;
     }
+
 
     public void AddRecord(string entityName, Dictionary<string, object> record)
     {
-        using var connection = new SqliteConnection(_connectionString);
+        _logger.LogInformation("Attempting to add record to entity: {EntityName}", entityName);
+        using var connection = _dataService.GetConnection();
+
         connection.Open();
         var command = connection.CreateCommand();
         var fields = string.Join(", ", record.Keys);
@@ -31,22 +32,28 @@ public class RecordService : IRecordService
             command.Parameters.AddWithValue($"@{kvp.Key}", kvp.Value);
         }
         command.ExecuteNonQuery();
+        _logger.LogInformation("Record added to entity: {EntityName}", entityName);
     }
+
 
     public void DeleteRecord(string entityName, Dictionary<string, object> record)
     {
-        using var connection = new SqliteConnection(_connectionString);
+        _logger.LogInformation("Attempting to delete record from entity: {EntityName}", entityName);
+        using var connection = _dataService.GetConnection();
         connection.Open();
         var command = connection.CreateCommand();
         var id = record["id"];
         command.CommandText = $"DELETE FROM [{entityName}] WHERE id = @id";
         command.Parameters.AddWithValue("@id", id);
         command.ExecuteNonQuery();
+        _logger.LogInformation("Record deleted from entity: {EntityName}", entityName);
     }
+
 
     public List<Dictionary<string, object>> GetRecords(string entityName)
     {
-        using var connection = new SqliteConnection(_connectionString);
+        _logger.LogInformation("Attempting to get records from entity: {EntityName}", entityName);
+        using var connection = _dataService.GetConnection();
         connection.Open();
         var command = connection.CreateCommand();
         command.CommandText = $"SELECT * FROM [{entityName}]";
@@ -64,13 +71,15 @@ public class RecordService : IRecordService
                 records.Add(record);
             }
         }
+        _logger.LogInformation("Retrieved {RecordCount} records from entity: {EntityName}", records.Count, entityName);
         return records;
     }
 
-    // get record by id
+
     public Dictionary<string, object>? GetRecordById(string entityName, int id)
     {
-        using var connection = new SqliteConnection(_connectionString);
+        _logger.LogInformation("Attempting to get record from entity: {EntityName} with id: {Id}", entityName, id);
+        using var connection = _dataService.GetConnection();
         connection.Open();
 
         using var command = connection.CreateCommand();
@@ -85,18 +94,21 @@ public class RecordService : IRecordService
             {
                 record[reader.GetName(i)] = reader.GetValue(i);
             }
+            _logger.LogInformation("Record found in entity: {EntityName} with id: {Id}", entityName, id);
             return record;
         }
+        _logger.LogInformation("Record not found in entity: {EntityName} with id: {Id}", entityName, id);
         return null;
     }
 
 
     public void UpdateRecord(string entityName, Dictionary<string, object> record)
     {
+        _logger.LogInformation("Attempting to update record in entity: {EntityName}", entityName);
         if (!record.ContainsKey("id"))
             throw new ArgumentException("Record must contain an 'id' field for update operation");
 
-        using var connection = new SqliteConnection(_connectionString);
+        using var connection = _dataService.GetConnection();
         connection.Open();
         var command = connection.CreateCommand();
         var fields = string.Join(", ", record.Keys.Where(k => k != "id").Select(k => $"{k} = @{k}"));
@@ -107,5 +119,6 @@ public class RecordService : IRecordService
             command.Parameters.AddWithValue($"@{kvp.Key}", kvp.Value);
         }
         command.ExecuteNonQuery();
+        _logger.LogInformation("Record updated in entity: {EntityName}", entityName);
     }
 }
