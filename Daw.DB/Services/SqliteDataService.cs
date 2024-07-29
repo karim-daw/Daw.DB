@@ -7,15 +7,10 @@ using System.Data.Common;
 
 namespace Daw.DB.Services
 {
-    public class SqliteDataService : IDataService
+    public class SqliteDataService(ILogger<EntityService> logger) : IDataService
     {
         public string? _connectionString;
-        private readonly ILogger<EntityService> _logger;
-
-        public SqliteDataService(ILogger<EntityService> logger)
-        {
-            _logger = logger;
-        }
+        private readonly ILogger<EntityService> _logger = logger;
 
         /// <summary>
         /// Create a new database with the given name

@@ -1,0 +1,5 @@
+{
+        // This file will specify the solution we use to build
+        "dotnet.defaultSolution": "Daw.DB.sln",
+        "FSharp.suggestGitignore": false
+}

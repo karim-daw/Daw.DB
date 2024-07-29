@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <Version>1.0</Version>
+    <Title>daw.db.gh</Title>
+    <Description>Description of daw.db.gh</Description>
+    <TargetExt>.gha</TargetExt>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <UserName>$(USERNAME)</UserName>
+    <GrasshopperLibraryDir>C:\Users\$(UserName)\AppData\Roaming\Grasshopper\Libraries</GrasshopperLibraryDir>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Grasshopper" Version="7.13.21348.13001" IncludeAssets="compile;build" />
+  </ItemGroup>
+  
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Copy SourceFiles="$(OutDir)daw.db.gh.gha" DestinationFolder="$(GrasshopperLibraryDir)" />
+  </Target>
+
+</Project>

@@ -3,28 +3,26 @@ using Microsoft.Data.Sqlite;
 
 namespace Daw.DB.Services;
 
-public class RecordService : IRecordService
+public class RecordService(IDataService dataService, ILogger<RecordService> logger) : IRecordService
 {
 
-    private readonly IDataService _dataService;
-    private readonly ILogger<RecordService> _logger;
-
-    public RecordService(IDataService dataService, ILogger<RecordService> logger)
-    {
-        _dataService = dataService;
-        _logger = logger;
-    }
-
+    private readonly IDataService _dataService = dataService;
+    private readonly ILogger<RecordService> _logger = logger;
 
     public void AddRecord(string entityName, Dictionary<string, object> record)
     {
         _logger.LogInformation("Attempting to add record to entity: {EntityName}", entityName);
         using var connection = _dataService.GetConnection();
-
         connection.Open();
         var command = connection.CreateCommand();
+
+        // Create the SQL command where the fields are the keys of the record
         var fields = string.Join(", ", record.Keys);
+
+        // Create the placeholders for the values in the record, '@' followed by the key means it's a parameter
         var placeholders = string.Join(", ", record.Keys.Select(k => $"@{k}"));
+
+        // Create the SQL command with the fields and placeholders
         command.CommandText = $"INSERT INTO [{entityName}] ({fields}) VALUES ({placeholders})";
 
         foreach (var kvp in record)
@@ -41,6 +39,7 @@ public class RecordService : IRecordService
         _logger.LogInformation("Attempting to delete record from entity: {EntityName}", entityName);
         using var connection = _dataService.GetConnection();
         connection.Open();
+
         var command = connection.CreateCommand();
         var id = record["id"];
         command.CommandText = $"DELETE FROM [{entityName}] WHERE id = @id";
@@ -55,11 +54,12 @@ public class RecordService : IRecordService
         _logger.LogInformation("Attempting to get records from entity: {EntityName}", entityName);
         using var connection = _dataService.GetConnection();
         connection.Open();
+
         var command = connection.CreateCommand();
         command.CommandText = $"SELECT * FROM [{entityName}]";
 
         var records = new List<Dictionary<string, object>>();
-        using (var reader = command.ExecuteReader())
+        var reader = command.ExecuteReader();
         {
             while (reader.Read())
             {
@@ -82,11 +82,11 @@ public class RecordService : IRecordService
         using var connection = _dataService.GetConnection();
         connection.Open();
 
-        using var command = connection.CreateCommand();
+        var command = connection.CreateCommand();
         command.CommandText = $"SELECT * FROM [{entityName}] WHERE id = @id";
         command.Parameters.AddWithValue("@id", id);
 
-        using var reader = command.ExecuteReader();
+        var reader = command.ExecuteReader();
         if (reader.Read())
         {
             var record = new Dictionary<string, object>(reader.FieldCount);

@@ -7,16 +7,10 @@ using System.Linq;
 
 namespace Daw.DB.Services
 {
-    public class EntityService : IEntityService
+    public class EntityService(IDataService dataService, ILogger<EntityService> logger) : IEntityService
     {
-        private readonly ILogger<EntityService> _logger;
-        private readonly IDataService _dataService;
-
-        public EntityService(IDataService dataService, ILogger<EntityService> logger)
-        {
-            _dataService = dataService;
-            _logger = logger;
-        }
+        private readonly ILogger<EntityService> _logger = logger;
+        private readonly IDataService _dataService = dataService;
 
         public void CreateEntity(string entityName, Dictionary<string, string> entityFields)
         {
