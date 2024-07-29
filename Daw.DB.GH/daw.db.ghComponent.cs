@@ -59,6 +59,6 @@ namespace daw.db.gh
     /// It is vital this Guid doesn't change otherwise old ghx files 
     /// that use the old ID will partially fail during loading.
     /// </summary>
-    public override Guid ComponentGuid => new Guid("948a6f49-be76-40b3-8b20-7f58e1afafff");
+    public override Guid ComponentGuid => new Guid("0d95e7cd-89a8-4ff6-ad0a-c6ecaba404bf");
   }
 }

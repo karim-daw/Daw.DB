@@ -15,7 +15,7 @@ namespace daw.db.gh
     //Return a short string describing the purpose of this GHA library.
     public override string Description => "";
 
-    public override Guid Id => new Guid("760139c5-6561-43ba-9317-40c87a6d8ce0");
+    public override Guid Id => new Guid("82725b9b-7dfc-483f-81b9-979ace4f7734");
 
     //Return a string identifying you or your company.
     public override string AuthorName => "";
