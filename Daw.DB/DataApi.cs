@@ -4,11 +4,18 @@ using System.Collections.Generic;
 
 namespace Daw.DB
 {
-    public class DataApi(IDataService dataService, IEntityService entityService, IRecordService recordService)
+    public class DataApi
     {
-        private readonly IDataService _dataService = dataService;
-        private readonly IEntityService _entityService = entityService;
-        private readonly IRecordService _recordService = recordService;
+        private readonly IDataService _dataService;
+        private readonly IEntityService _entityService;
+        private readonly IRecordService _recordService;
+
+        public DataApi(IDataService dataService, IEntityService entityService, IRecordService recordService)
+        {
+            _dataService = dataService;
+            _entityService = entityService;
+            _recordService = recordService;
+        }
 
         public void InitializeDatabase(string databaseName)
         {

@@ -1,11 +1,10 @@
-using Daw.DB;
 using Daw.DB.Interfaces;
 using Daw.DB.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 
-namespace DynamicEntitiesApp
+namespace Daw.DB
 {
     class Program
     {
