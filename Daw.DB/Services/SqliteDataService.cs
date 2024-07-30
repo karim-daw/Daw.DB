@@ -1,20 +1,16 @@
 ﻿using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Daw.DB.Interfaces;
-using Microsoft.Extensions.Logging;
+using System.Data.Common;
 
 namespace Daw.DB.Services
 {
-    public class SqliteDataService : IDataService
+    public class SqliteDataService(ILogger<EntityService> logger) : IDataService
     {
-        public string _connectionString;
-        private readonly ILogger<EntityService> _logger;
-
-        public SqliteDataService(ILogger<EntityService> logger)
-        {
-            _logger = logger;
-        }
+        public string? _connectionString;
+        private readonly ILogger<EntityService> _logger = logger;
 
         /// <summary>
         /// Create a new database with the given name
@@ -24,11 +20,9 @@ namespace Daw.DB.Services
         {
             _logger.LogInformation("Attempting to create database: {DatabaseName}", databaseName);
             _connectionString = $"Data Source={databaseName}.db";
-            ExecuteNonQuery((connection) =>
-            {
-                connection.Open();
-                _logger.LogInformation("Database created successfully: {DatabaseName}", databaseName);
-            });
+            using var connection = this.GetConnection();
+            connection.Open();
+            _logger.LogInformation("Database created successfully: {DatabaseName}", databaseName);
         }
 
         /// <summary>
@@ -45,25 +39,21 @@ namespace Daw.DB.Services
             {
                 throw new InvalidOperationException("Connection string is not set");
             }
-
-            return ExecuteReader((connection) =>
+            using var connection = this.GetConnection();
+            connection.Open();
+            var command = connection.CreateCommand();
+            command.CommandText = $"PRAGMA table_info([{tableName}])";
+            var reader = command.ExecuteReader();
+            while (reader.Read())
             {
-                connection.Open();
-                var command = connection.CreateCommand();
-                command.CommandText = $"PRAGMA table_info([{tableName}])";
-                return command.ExecuteReader();
-            }, (reader) =>
-            {
-                while (reader.Read())
+                if (reader.GetString(1).Equals(columnName, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (reader.GetString(1).Equals(columnName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
-                return false;
-            });
+            }
+            return false;
         }
+
 
         public SqliteConnection GetConnection()
         {
@@ -74,38 +64,5 @@ namespace Daw.DB.Services
             return new SqliteConnection(_connectionString);
         }
 
-        private void ExecuteNonQuery(Action<SqliteConnection> action)
-        {
-            var connection = GetConnection();
-            try
-            {
-                action(connection);
-            }
-            finally
-            {
-                connection.Dispose();
-            }
-        }
-
-        private T ExecuteReader<T>(Func<SqliteConnection, SqliteDataReader> commandFunc, Func<SqliteDataReader, T> readerFunc)
-        {
-            var connection = GetConnection();
-            try
-            {
-                var reader = commandFunc(connection);
-                try
-                {
-                    return readerFunc(reader);
-                }
-                finally
-                {
-                    reader.Dispose();
-                }
-            }
-            finally
-            {
-                connection.Dispose();
-            }
-        }
     }
 }
