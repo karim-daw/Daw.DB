@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
+	
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFrameworks>net7.0;net48</TargetFrameworks>
     <Version>1.0</Version>
-    <Title>daw.db.gh</Title>
-    <Description>Description of daw.db.gh</Description>
+    <Title>Daw.DB.GH</Title>
+    <Description>Description of Daw.DB.GH</Description>
     <TargetExt>.gha</TargetExt>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <UserName>$(USERNAME)</UserName>

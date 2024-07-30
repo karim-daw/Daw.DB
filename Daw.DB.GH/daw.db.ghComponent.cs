@@ -5,9 +5,9 @@ using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace daw.db.gh
+namespace Daw.DB.GH
 {
-  public class daw_db_ghComponent : GH_Component
+  public class Daw_DB_GHComponent : GH_Component
   {
     /// <summary>
     /// Each implementation of GH_Component must provide a public 
@@ -16,8 +16,8 @@ namespace daw.db.gh
     /// Subcategory the panel. If you use non-existing tab or panel names, 
     /// new tabs/panels will automatically be created.
     /// </summary>
-    public daw_db_ghComponent()
-      : base("daw.db.gh Component", "Nickname",
+    public Daw_DB_GHComponent()
+      : base("Daw.DB.GH Component", "Nickname",
         "Description of component",
         "Category", "Subcategory")
     {
@@ -59,6 +59,6 @@ namespace daw.db.gh
     /// It is vital this Guid doesn't change otherwise old ghx files 
     /// that use the old ID will partially fail during loading.
     /// </summary>
-    public override Guid ComponentGuid => new Guid("0d95e7cd-89a8-4ff6-ad0a-c6ecaba404bf");
+    public override Guid ComponentGuid => new Guid("9f9ab801-c330-4e4d-8409-851fbedcf364");
   }
 }
