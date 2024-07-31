@@ -1,22 +1,51 @@
-<Project Sdk="Microsoft.NET.Sdk">
-	
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <Version>1.0</Version>
-    <Title>Daw.DB.GH</Title>
-    <Description>Description of Daw.DB.GH</Description>
+    <Title>Daw.DB.Ghc</Title>
+    <Description>Description of Daw.DB.Ghc</Description>
     <TargetExt>.gha</TargetExt>
-    <OutDir>$(SolutionDir)bin\</OutDir>
-    <UserName>$(USERNAME)</UserName>
-    <GrasshopperLibraryDir>C:\Users\$(UserName)\AppData\Roaming\Grasshopper\Libraries</GrasshopperLibraryDir>
+    <!-- Define the target directory dynamically using the USERPROFILE environment variable -->
+    <GrasshopperLibrariesDir>$(USERPROFILE)\AppData\Roaming\Grasshopper\Libraries\Daw.DB.Ghc</GrasshopperLibrariesDir>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Grasshopper" Version="7.13.21348.13001" IncludeAssets="compile;build" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115.5" />
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <ProjectReference Include="..\Daw.DB.Data\Daw.DB.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Copy SourceFiles="$(OutDir)daw.db.gh.gha" DestinationFolder="$(GrasshopperLibraryDir)" />
+    <!-- Create the target directory if it doesn't exist -->
+    <MakeDir Directories="$(GrasshopperLibrariesDir)" Condition="!Exists('$(GrasshopperLibrariesDir)')" />
+
+    <!-- Copy the .gha file -->
+    <Copy SourceFiles="$(OutputPath)$(ProjectName).gha" DestinationFolder="$(GrasshopperLibrariesDir)" />
+
+    <!-- Copy all files and subfolders from the project's output directory -->
+    <ItemGroup>
+      <AllDependencies Include="$(OutputPath)**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AllDependencies)" DestinationFolder="$(GrasshopperLibrariesDir)" />
   </Target>
 
 </Project>
