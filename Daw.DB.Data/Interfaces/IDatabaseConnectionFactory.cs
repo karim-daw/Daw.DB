@@ -9,5 +9,8 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <returns></returns>
         IDbConnection CreateConnection();
+
+        // set the connection string
+        void SetConnectionString(string dbPath);
     }
 }

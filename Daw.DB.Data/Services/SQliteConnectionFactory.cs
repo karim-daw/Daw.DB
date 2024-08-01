@@ -7,9 +7,15 @@ namespace Daw.DB.Data.Services
 {
     public class SQLiteConnectionFactory : IDatabaseConnectionFactory
     {
-        private readonly string _connectionString;
+        private string _connectionString;
 
-        public SQLiteConnectionFactory(string dbPath)
+        public SQLiteConnectionFactory()
+        {
+            // Initialize with a default connection string if needed
+            _connectionString = "Data Source=:memory:;Version=3;"; // Default to an in-memory database
+        }
+
+        public void SetConnectionString(string dbPath)
         {
             if (!File.Exists(dbPath))
             {
@@ -24,4 +30,5 @@ namespace Daw.DB.Data.Services
             return new SQLiteConnection(_connectionString);
         }
     }
+
 }

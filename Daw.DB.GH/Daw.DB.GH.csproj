@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <Version>1.0</Version>
-    <Title>Daw.DB.Ghc</Title>
-    <Description>Description of Daw.DB.Ghc</Description>
+    <Title>Daw.DB.GH</Title>
+    <Description>Description of Daw.DB.GH</Description>
     <TargetExt>.gha</TargetExt>
     <!-- Define the target directory dynamically using the USERPROFILE environment variable -->
-    <GrasshopperLibrariesDir>$(USERPROFILE)\AppData\Roaming\Grasshopper\Libraries\Daw.DB.Ghc</GrasshopperLibrariesDir>
+    <GrasshopperLibrariesDir>$(USERPROFILE)\AppData\Roaming\Grasshopper\Libraries\Daw.DB.GH</GrasshopperLibrariesDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,11 +41,17 @@
     <!-- Copy the .gha file -->
     <Copy SourceFiles="$(OutputPath)$(ProjectName).gha" DestinationFolder="$(GrasshopperLibrariesDir)" />
 
-    <!-- Copy all files and subfolders from the project's output directory -->
+    <!-- Copy all files and subfolders from Daw.DB.Data's output directory -->
     <ItemGroup>
-      <AllDependencies Include="$(OutputPath)**\*.*" />
+      <ProjectDependencies Include="..\Daw.DB.Data\bin\$(Configuration)\**\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(AllDependencies)" DestinationFolder="$(GrasshopperLibrariesDir)" />
+    <Copy SourceFiles="@(ProjectDependencies)" DestinationFolder="$(GrasshopperLibrariesDir)" />
+
+    <!-- Copy the entire runtimes folder including subfolders -->
+    <ItemGroup>
+      <RuntimeDependencies Include="runtimes\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RuntimeDependencies)" DestinationFolder="$(GrasshopperLibrariesDir)" />
   </Target>
 
 </Project>

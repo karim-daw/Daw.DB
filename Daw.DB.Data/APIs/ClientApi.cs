@@ -1,9 +1,6 @@
 ﻿using Daw.DB.Data.Interfaces;
-using Daw.DB.Data.Services;
 using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
-using System.IO;
 
 namespace Daw.DB.Data.APIs
 {
@@ -29,20 +26,16 @@ namespace Daw.DB.Data.APIs
             _serviceProvider = serviceProvider;
         }
 
-        public void SetDatabasePath(string databasePath)
+        public void InitializeDatabase(string databasePath)
         {
-            _connectionFactory = new SQLiteConnectionFactory(databasePath);
-        }
-
-        // Method to explicitly create and initialize the database
-        public void InitializeDatabase(string databaseName)
-        {
-            string databasePath = $"{databaseName}.db";
-            if (!File.Exists(databasePath))
+            _connectionFactory.SetConnectionString(databasePath);
+            // Create the database connection to ensure the database file is created
+            using (var db = _connectionFactory.CreateConnection())
             {
-                SQLiteConnection.CreateFile(databasePath);
+                db.Open();
             }
         }
+
 
         public void CreateTable(string tableName, Dictionary<string, string> columns)
         {

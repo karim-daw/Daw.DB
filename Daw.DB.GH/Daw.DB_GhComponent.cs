@@ -14,8 +14,8 @@ namespace Daw.DB.GH
             "Creates and initializes a database",
             "Category", "Subcategory")
         {
-            // Use the ApiFactory to get a pre-configured IClientApi instance
-            _clientApi = ApiFactory.GetClientApi();  // Notice no database path is passed here
+            // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
+            _clientApi = ApiFactory.GetClientApi();
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
