@@ -7,7 +7,7 @@ namespace Daw.DB.GH
 {
     public class DB_GhComponent : GH_Component
     {
-        private readonly IClientApi _clientApi;
+        private readonly IGH_ClientApi _clientApi;
 
         public DB_GhComponent()
           : base("DB_GhComponent", "DB",

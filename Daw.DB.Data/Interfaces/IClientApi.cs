@@ -4,22 +4,178 @@ namespace Daw.DB.Data.Interfaces
 {
     public interface IClientApi
     {
+
+        #region Database Operations
+
+        /// <summary>
+        /// Initializes a new database with the given name.
+        /// </summary>
+        /// <param name="databaseName"></param>
         void InitializeDatabase(string databaseName); // Add this method
 
+        #endregion
+
+        #region Table Operations
+
+        /// <summary>
+        /// Creates a new table with the given name and columns. 
+        /// This expects a dictionary of column names and their data types.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="columns"></param>
         void CreateTable(string tableName, Dictionary<string, string> columns);
-        void AddEntityRecord<T>(string tableName, T record) where T : class;
-        void AddDictionaryRecord(string tableName, Dictionary<string, object> record);
-        void AddRecordFromJson(string tableName, string jsonRecord);
+
+        /// <summary>
+        /// Creates a new table with the given name and columns.
+        /// This expects a JSON schema string.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="jsonSchema"></param>
         void AddTableFromJson(string tableName, string jsonSchema);
+
+        #endregion
+
+
+        #region Add Record
+
+        /// <summary>
+        /// Adds a new record to the table with the given name.
+        /// This expects an entity object.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tableName"></param>
+        /// <param name="record"></param>
+        void AddEntityRecord<T>(string tableName, T record) where T : class;
+
+        /// <summary>
+        /// Adds a new record to the table with the given name.
+        /// This expects a dictionary of column names and their values.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="record"></param>
+        void AddDictionaryRecord(string tableName, Dictionary<string, object> record);
+
+        /// <summary>
+        /// Adds a new record to the table with the given name.
+        /// This expects a JSON string.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="jsonRecord"></param>
+        void AddRecordFromJson(string tableName, string jsonRecord);
+
+
+        #endregion
+
+        #region Get Records
+
+        /// <summary>
+        /// Gets all records from the table with the given name.
+        /// This expects an entity object.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
         IEnumerable<T> GetAllEntityRecords<T>(string tableName) where T : class;
+
+        /// <summary>
+        /// Gets all records from the table with the given name.
+        /// This expects a dictionary of column names and their values.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
         IEnumerable<dynamic> GetAllDictionaryRecords(string tableName);
+
+        /// <summary>
+        /// Gets all records from the table with the given name.
+        /// This expects a JSON string.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tableName"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
         T GetEntityRecordById<T>(string tableName, object id) where T : class;
+
+        /// <summary>
+        /// Gets a record from the table with the given name.
+        /// This expects a dictionary of column names and their values.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
         dynamic GetDictionaryRecordById(string tableName, object id);
+
+        #endregion
+
+
+        #region Update Record
+
+        /// <summary>
+        /// Updates a record in the table with the given name.
+        /// This expects an entity object.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tableName"></param>
+        /// <param name="record"></param>
         void UpdateEntityRecord<T>(string tableName, T record) where T : class;
+
+        /// <summary>
+        /// Updates a record in the table with the given name.
+        /// This expects a dictionary of column names and their values.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="id"></param>
+        /// <param name="record"></param>
         void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record);
+
+        /// <summary>
+        /// Updates a record in the table with the given name.
+        /// This expects a JSON string representing the record.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="id"></param>
+        /// <param name="jsonRecord"></param>
         void UpdateRecordFromJson(string tableName, object id, string jsonRecord);
+
+        #endregion
+
+        #region Delete Record
+
+        /// <summary>
+        /// Deletes a record from the table with the given name.
+        /// You will need to provide the id of the record to delete.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="id"></param>
         void DeleteRecord(string tableName, object id);
+
+        #endregion
+
+        #region Query
+
+        /// <summary>
+        /// Executes a query and returns the result.
+        /// This expects a SQL query string.
+        /// You can also provide parameters for the query. 
+        /// Example:
+        /// var parameters = new { Id = 1 };
+        /// var result = ExecuteQuery("SELECT * FROM Table WHERE Id = @Id", parameters);
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         IEnumerable<dynamic> ExecuteQuery(string sql, object parameters = null);
+
+        /// <summary>
+        /// Executes a command.
+        /// This expects a SQL command string.
+        /// You can also provide parameters for the command.
+        /// Example:
+        /// var parameters = new { Id = 1 };
+        /// ExecuteCommand("DELETE FROM Table WHERE Id = @Id", parameters);
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
         void ExecuteCommand(string sql, object parameters = null);
+
+        #endregion
+
     }
 }
