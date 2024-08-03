@@ -1,7 +1,9 @@
 
-namespace Daw.DB.Data.APIs
+using System.Collections.Generic;
+
+namespace Daw.DB.Data.Interfaces
 {
-    public interface IGH_ClientApi
+    public interface IGhClientApi
     {
         #region Database Operations
 
@@ -85,6 +87,8 @@ namespace Daw.DB.Data.APIs
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         void DeleteRecord(string tableName, object id);
+
+        #endregion
 
     }
 

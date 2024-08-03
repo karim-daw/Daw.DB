@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Daw.DB.Data.APIs
 {
-    public class GH_ClientApi : IGH_ClientApi
+    public class GH_ClientApi : IGhClientApi
     {
         private IDatabaseConnectionFactory _connectionFactory;
         private readonly ISqlService _sqlService;
