@@ -21,7 +21,10 @@ namespace Daw.DB.Data
             // using a generic handler for entities to avoid having to register each entity type
             // this is usefull if the user wants to add new entities without having to modify the API
             services.AddSingleton(typeof(IEntityHandler<>), typeof(EntityHandler<>));
+
+            // Register the client APIs
             services.AddSingleton<IClientApi, ClientApi>();
+            services.AddSingleton<IGhClientApi, GhClientApi>();
 
             // Build and return the ServiceProvider
             return services.BuildServiceProvider();
