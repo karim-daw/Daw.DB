@@ -9,6 +9,10 @@ namespace Daw.DB.Data.Services
     {
         private string _connectionString;
 
+
+        // Default path should be to desktop
+        private const string DefaultPath = @"C:\Users\Public\Desktop";
+
         public SQLiteConnectionFactory()
         {
             // Initialize with a default connection string if needed
