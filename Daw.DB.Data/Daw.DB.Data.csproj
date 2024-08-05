@@ -141,11 +141,13 @@
   <ItemGroup>
     <Compile Include="ApiFactory.cs" />
     <Compile Include="APIs\ClientApi.cs" />
+    <Compile Include="APIs\GhClientApi.cs" />
     <Compile Include="Interfaces\IClientApi.cs" />
     <Compile Include="Interfaces\IDatabaseConnectionFactory.cs" />
     <Compile Include="Interfaces\IDictionaryHandler.cs" />
     <Compile Include="Interfaces\IEntity.cs" />
     <Compile Include="Interfaces\IEntityHandler.cs" />
+    <Compile Include="Interfaces\IGhClientApi.cs" />
     <Compile Include="Interfaces\IJsonHandler.cs" />
     <Compile Include="Interfaces\ISqlService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

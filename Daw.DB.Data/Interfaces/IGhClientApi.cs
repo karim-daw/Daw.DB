@@ -11,7 +11,8 @@ namespace Daw.DB.Data.Interfaces
         /// Initializes a new database with the given name.
         /// </summary>
         /// <param name="databaseName"></param>
-        void InitializeDatabase(string databaseName); // Add this method
+        /// <returns>Message output relating to success or failure of db operatations</returns>
+        string InitializeDatabase(string databaseName); // Add this method
 
         #endregion
 
@@ -23,7 +24,8 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="columns"></param>
-        void CreateTable(string tableName, Dictionary<string, string> columns);
+        /// <returns>Message output relating to success or failure of table operations</returns>
+        string CreateTable(string tableName, Dictionary<string, string> columns);
 
 
         #endregion
@@ -37,7 +39,8 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="record"></param>
-        void AddDictionaryRecord(string tableName, Dictionary<string, object> record);
+        /// <returns>Message output relating to success or failure of record operations</returns>
+        string AddDictionaryRecord(string tableName, Dictionary<string, object> record);
 
 
         #endregion

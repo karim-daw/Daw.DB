@@ -1,18 +1,17 @@
 using Daw.DB.Data.Interfaces;
-using System;
 using System.Collections.Generic;
 
 
 namespace Daw.DB.Data.APIs
 {
-    public class GH_ClientApi : IGhClientApi
+    public class GhClientApi : IGhClientApi
     {
         private IDatabaseConnectionFactory _connectionFactory;
         private readonly ISqlService _sqlService;
         private readonly IJsonHandler _jsonHandler;
         private readonly IDictionaryHandler _dictionaryHandler;
 
-        public GH_ClientApi(
+        public GhClientApi(
             IDatabaseConnectionFactory connectionFactory,
             ISqlService sqlService,
             IJsonHandler jsonHandler,
@@ -28,13 +27,22 @@ namespace Daw.DB.Data.APIs
         /// Initializes a new database with the given name.
         /// </summary>
         /// <param name="databasePath"></param>
-        public void InitializeDatabase(string databasePath)
+        /// <returns>Message output relating to success or failure of db operatations</returns>
+        public string InitializeDatabase(string databasePath)
         {
-            _connectionFactory.SetConnectionString(databasePath);
-            // Create the database connection to ensure the database file is created
-            using (var db = _connectionFactory.CreateConnection())
+            try
             {
-                db.Open();
+                _connectionFactory.SetConnectionString(databasePath);
+                // Create the database connection to ensure the database file is created
+                using (var db = _connectionFactory.CreateConnection())
+                {
+                    db.Open();
+                }
+                return $"Database created at '{databasePath}'  successfully.";
+            }
+            catch (System.Exception ex)
+            {
+                return $"Error: {ex.Message}";
             }
         }
 
@@ -43,9 +51,18 @@ namespace Daw.DB.Data.APIs
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="columns"></param>
-        public void CreateTable(string tableName, Dictionary<string, string> columns)
+        /// <returns>Message output relating to success or failure of table operations</returns>
+        public string CreateTable(string tableName, Dictionary<string, string> columns)
         {
-            _dictionaryHandler.CreateTable(tableName, columns);
+            try
+            {
+                _dictionaryHandler.CreateTable(tableName, columns);
+                return $"Table '{tableName}' created successfully.";
+            }
+            catch (System.Exception ex)
+            {
+                return $"Error: {ex.Message}";
+            }
         }
 
         /// <summary>
@@ -53,9 +70,22 @@ namespace Daw.DB.Data.APIs
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="record"></param>
-        public void AddDictionaryRecord(string tableName, Dictionary<string, object> record)
+        /// <returns>Message output relating to success or failure of table operations</returns>
+        public string AddDictionaryRecord(string tableName, Dictionary<string, object> record)
         {
-            _dictionaryHandler.AddRecord(tableName, record);
+            try
+            {
+                // add the record to the table
+                _dictionaryHandler.AddRecord(tableName, record);
+
+                // return the record added message wth the record details as a string
+                var stringRecord = record.ToString();
+                return $"Record added to table '{tableName}' successfully. Record: {stringRecord}";
+            }
+            catch (System.Exception ex)
+            {
+                return $"Error: {ex.Message}";
+            }
         }
 
 
