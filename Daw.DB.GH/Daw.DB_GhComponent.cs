@@ -19,6 +19,8 @@ namespace Daw.DB.GH
             _ghClientApi = ApiFactory.GetGhClientApi();
         }
 
+        // TODO: Create ost build settings robust
+
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddBooleanParameter("Create", "C", "Boolean to trigger database creation", GH_ParamAccess.item);
@@ -52,8 +54,8 @@ namespace Daw.DB.GH
             if (!DA.GetData(2, ref createTable)) return;
             if (!DA.GetData(3, ref tableName)) return;
             if (!DA.GetData(4, ref createRecord)) return;
-            if (!DA.GetData(5, ref recordKeys)) return;
-            if (!DA.GetData(6, ref recordValues)) return;
+            if (!DA.GetDataList(5, recordKeys)) return;
+            if (!DA.GetDataList(6, recordValues)) return;
 
             // Create the database
             if (createDatabase)
@@ -86,10 +88,6 @@ namespace Daw.DB.GH
                 string result = _ghClientApi.AddDictionaryRecord(tableName, record);
                 DA.SetData(0, result);
             }
-
-
-
-
         }
 
 
