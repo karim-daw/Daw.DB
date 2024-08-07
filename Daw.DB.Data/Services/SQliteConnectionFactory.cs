@@ -29,6 +29,7 @@ namespace Daw.DB.Data.Services
             _connectionString = $"Data Source={dbPath};Version=3;";
         }
 
+        // todo this should take a path as an argument
         public IDbConnection CreateConnection()
         {
             return new SQLiteConnection(_connectionString);
