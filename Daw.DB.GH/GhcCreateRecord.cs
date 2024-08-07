@@ -12,7 +12,7 @@ namespace Daw.DB.GH
 
         public GhcCreateRecord()
           : base("CreateRecord", "CR",
-            "Creates a record and puts it in the database",
+            "Creates a record and inserts it into the database",
             "Category", "Subcategory")
         {
             // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
@@ -21,9 +21,9 @@ namespace Daw.DB.GH
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("Database Name", "DB", "Name of the database to create", GH_ParamAccess.item);
-            pManager.AddTextParameter("Table Name", "T", "Name of the table to create", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("Add Record", "AR", "Boolean to trigger record addition", GH_ParamAccess.item);
+            pManager.AddTextParameter("DatabasePath", "DBP", "Path to the database file", GH_ParamAccess.item);
+            pManager.AddTextParameter("TableName", "T", "Name of the table to insert the record into", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("AddRecord", "AR", "Boolean to trigger record addition", GH_ParamAccess.item);
             pManager.AddTextParameter("RecordKeys", "RK", "Record KEYS to add to the table", GH_ParamAccess.list);
             pManager.AddTextParameter("RecordValues", "RV", "Record VALUES to add to the table", GH_ParamAccess.list);
         }
@@ -35,44 +35,47 @@ namespace Daw.DB.GH
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            bool createRecord = false;
-            string databaseName = null;
+            bool addRecord = false;
+            string databasePath = null;
             string tableName = null;
             List<string> recordKeys = new List<string>();
             List<string> recordValues = new List<string>();
 
             // Retrieve input data
-            if (!DA.GetData(1, ref databaseName)) return;
-            if (!DA.GetData(3, ref tableName)) return;
-            if (!DA.GetData(4, ref createRecord)) return;
-            if (!DA.GetDataList(5, recordKeys)) return;
-            if (!DA.GetDataList(6, recordValues)) return;
-
-
+            if (!DA.GetData(0, ref databasePath)) return;
+            if (!DA.GetData(1, ref tableName)) return;
+            if (!DA.GetData(2, ref addRecord)) return;
+            if (!DA.GetDataList(3, recordKeys)) return;
+            if (!DA.GetDataList(4, recordValues)) return;
 
             // Add a record to the table
-            if (createRecord)
+            if (addRecord)
             {
-                string result = CreateRecord(tableName, recordKeys, recordValues);
+                string result = CreateRecord(databasePath, tableName, recordKeys, recordValues);
                 DA.SetData(0, result);
             }
         }
 
-        // Wrapper methods
-
-        private string CreateRecord(string tableName, List<string> recordKeys, List<string> recordValues)
+        // Wrapper method
+        private string CreateRecord(string databasePath, string tableName, List<string> recordKeys, List<string> recordValues)
         {
             var record = new Dictionary<string, object>();
             for (int i = 0; i < recordKeys.Count; i++)
             {
                 record.Add(recordKeys[i], recordValues[i]);
             }
-            string result = _ghClientApi.AddDictionaryRecord(tableName, record);
-            return result;
+
+            string connectionString = $"Data Source={databasePath};Version=3;";
+            try
+            {
+                _ghClientApi.AddDictionaryRecord(tableName, record, connectionString);
+                return "Record added successfully.";
+            }
+            catch (Exception ex)
+            {
+                return $"Error adding record: {ex.Message}";
+            }
         }
-
-
-
 
         protected override System.Drawing.Bitmap Icon => null; // Add an icon if available
 

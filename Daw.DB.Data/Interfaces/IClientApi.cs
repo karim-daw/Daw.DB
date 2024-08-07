@@ -11,7 +11,7 @@ namespace Daw.DB.Data.Interfaces
         /// Initializes a new database with the given name.
         /// </summary>
         /// <param name="databaseName"></param>
-        void InitializeDatabase(string databaseName); // Add this method
+        void InitializeDatabase(string connectionString); // Add this method
 
         #endregion
 
@@ -23,7 +23,7 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="columns"></param>
-        void CreateTable(string tableName, Dictionary<string, string> columns);
+        void CreateTable(string tableName, Dictionary<string, string> columns, string connectionString);
 
         /// <summary>
         /// Creates a new table with the given name and columns.
@@ -31,7 +31,7 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="jsonSchema"></param>
-        void AddTableFromJson(string tableName, string jsonSchema);
+        void AddTableFromJson(string tableName, string jsonSchema, string connectionString);
 
         #endregion
 
@@ -45,7 +45,7 @@ namespace Daw.DB.Data.Interfaces
         /// <typeparam name="T"></typeparam>
         /// <param name="tableName"></param>
         /// <param name="record"></param>
-        void AddEntityRecord<T>(string tableName, T record) where T : class;
+        void AddEntityRecord<T>(string tableName, T record, string connectionString) where T : class;
 
         /// <summary>
         /// Adds a new record to the table with the given name.
@@ -53,7 +53,7 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="record"></param>
-        void AddDictionaryRecord(string tableName, Dictionary<string, object> record);
+        void AddDictionaryRecord(string tableName, Dictionary<string, object> record, string connectionString);
 
         /// <summary>
         /// Adds a new record to the table with the given name.
@@ -61,7 +61,7 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="jsonRecord"></param>
-        void AddRecordFromJson(string tableName, string jsonRecord);
+        void AddRecordFromJson(string tableName, string jsonRecord, string connectionString);
 
 
         #endregion
@@ -75,7 +75,7 @@ namespace Daw.DB.Data.Interfaces
         /// <typeparam name="T"></typeparam>
         /// <param name="tableName"></param>
         /// <returns></returns>
-        IEnumerable<T> GetAllEntityRecords<T>(string tableName) where T : class;
+        IEnumerable<T> GetAllEntityRecords<T>(string tableName, string connectionString) where T : class;
 
         /// <summary>
         /// Gets all records from the table with the given name.
@@ -83,7 +83,7 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
-        IEnumerable<dynamic> GetAllDictionaryRecords(string tableName);
+        IEnumerable<dynamic> GetAllDictionaryRecords(string tableName, string connectionString);
 
         /// <summary>
         /// Gets all records from the table with the given name.
@@ -93,7 +93,7 @@ namespace Daw.DB.Data.Interfaces
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        T GetEntityRecordById<T>(string tableName, object id) where T : class;
+        T GetEntityRecordById<T>(string tableName, object id, string connectionString) where T : class;
 
         /// <summary>
         /// Gets a record from the table with the given name.
@@ -102,7 +102,7 @@ namespace Daw.DB.Data.Interfaces
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        dynamic GetDictionaryRecordById(string tableName, object id);
+        dynamic GetDictionaryRecordById(string tableName, object id, string connectionString);
 
         #endregion
 
@@ -116,7 +116,7 @@ namespace Daw.DB.Data.Interfaces
         /// <typeparam name="T"></typeparam>
         /// <param name="tableName"></param>
         /// <param name="record"></param>
-        void UpdateEntityRecord<T>(string tableName, T record) where T : class;
+        void UpdateEntityRecord<T>(string tableName, T record, string connectionString) where T : class;
 
         /// <summary>
         /// Updates a record in the table with the given name.
@@ -125,7 +125,7 @@ namespace Daw.DB.Data.Interfaces
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         /// <param name="record"></param>
-        void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record);
+        void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record, string connectionString);
 
         /// <summary>
         /// Updates a record in the table with the given name.
@@ -134,7 +134,7 @@ namespace Daw.DB.Data.Interfaces
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         /// <param name="jsonRecord"></param>
-        void UpdateRecordFromJson(string tableName, object id, string jsonRecord);
+        void UpdateRecordFromJson(string tableName, object id, string jsonRecord, string connectionString);
 
         #endregion
 
@@ -146,7 +146,7 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="id"></param>
-        void DeleteRecord(string tableName, object id);
+        void DeleteRecord(string tableName, object id, string connectionString);
 
         #endregion
 
@@ -162,7 +162,7 @@ namespace Daw.DB.Data.Interfaces
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        IEnumerable<dynamic> ExecuteQuery(string sql, object parameters = null);
+        IEnumerable<dynamic> ExecuteQuery(string sql, string connectionString, object parameters = null);
 
         /// <summary>
         /// Executes a command.
@@ -173,7 +173,7 @@ namespace Daw.DB.Data.Interfaces
         /// ExecuteCommand("DELETE FROM Table WHERE Id = @Id", parameters);
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
-        void ExecuteCommand(string sql, object parameters = null);
+        void ExecuteCommand(string sql, string connectionString, object parameters = null);
 
         #endregion
 

@@ -1,39 +1,60 @@
 ﻿using Daw.DB.Data.Interfaces;
+using System;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
 
 namespace Daw.DB.Data.Services
 {
-    public class SQLiteConnectionFactory : IDatabaseConnectionFactory
+    public class SQLiteConnectionFactory : IDatabaseConnectionFactory, IDatabaseCreationFactory
     {
-        private string _connectionString;
+        // Constructor that takes a default connection string (optional)
 
-
-        // Default path should be to desktop
-        private const string DefaultPath = @"C:\Users\Public\Desktop";
-
-        public SQLiteConnectionFactory()
+        // Method to create a new SQLite database file
+        public void CreateDatabase(string dbPath)
         {
-            // Initialize with a default connection string if needed
-            _connectionString = "Data Source=:memory:;Version=3;"; // Default to an in-memory database
-        }
+            if (string.IsNullOrWhiteSpace(dbPath))
+            {
+                throw new ArgumentException("Database path must be provided.", nameof(dbPath));
+            }
 
-        public void SetConnectionString(string dbPath)
-        {
+            // If the database file does not exist, create it
             if (!File.Exists(dbPath))
             {
                 SQLiteConnection.CreateFile(dbPath);
             }
-
-            _connectionString = $"Data Source={dbPath};Version=3;";
+            else
+            {
+                throw new IOException($"Database file already exists at {dbPath}");
+            }
         }
 
-        // todo this should take a path as an argument
-        public IDbConnection CreateConnection()
+        // Method to create a connection to an existing database using a connection string
+        public IDbConnection CreateConnection(string connectionString)
         {
-            return new SQLiteConnection(_connectionString);
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new ArgumentException("Connection string must be provided.", nameof(connectionString));
+            }
+
+            return new SQLiteConnection(connectionString);
+        }
+
+        // Optional method to create a connection to a database using a file path
+        public IDbConnection CreateConnectionFromFilePath(string dbPath)
+        {
+            if (string.IsNullOrWhiteSpace(dbPath))
+            {
+                throw new ArgumentException("Database path must be provided.", nameof(dbPath));
+            }
+
+            if (!File.Exists(dbPath))
+            {
+                throw new FileNotFoundException($"Database file not found at {dbPath}");
+            }
+
+            string connectionString = $"Data Source={dbPath};Version=3;";
+            return CreateConnection(connectionString);
         }
     }
-
 }

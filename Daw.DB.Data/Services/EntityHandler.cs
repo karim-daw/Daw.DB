@@ -15,9 +15,9 @@ namespace Daw.DB.Data.Services
             _tableName = typeof(T).Name;
         }
 
-        public void CreateTable(Dictionary<string, string> columns)
+        public void CreateTable(Dictionary<string, string> columns, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var columnsDefinition = string.Join(", ", columns);
@@ -26,9 +26,9 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public void AddRecord(T record)
+        public void AddRecord(T record, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var insertQuery = $"INSERT INTO {_tableName} (Name) VALUES (@Name)";
@@ -36,9 +36,9 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public IEnumerable<T> GetAllRecords()
+        public IEnumerable<T> GetAllRecords(string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var selectQuery = $"SELECT * FROM {_tableName}";
@@ -46,9 +46,9 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public T GetRecordById(object id)
+        public T GetRecordById(object id, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var selectQuery = $"SELECT * FROM {_tableName} WHERE Id = @Id";
@@ -56,9 +56,9 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public void UpdateRecord(T record)
+        public void UpdateRecord(T record, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var updateQuery = $"UPDATE {_tableName} SET Name = @Name WHERE Id = @Id";
@@ -66,13 +66,16 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public void DeleteRecord(object id)
+        public void DeleteRecord(object id, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var deleteQuery = $"DELETE FROM {_tableName} WHERE Id = @Id";
-                db.Execute(deleteQuery, new { Id = id });
+                db.Execute(deleteQuery, new
+                {
+                    Id = id
+                });
             }
         }
     }

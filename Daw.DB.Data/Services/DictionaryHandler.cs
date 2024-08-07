@@ -17,9 +17,9 @@ namespace Daw.DB.Data.Services
             _connectionFactory = connectionFactory;
         }
 
-        public void CreateTable(string tableName, Dictionary<string, string> columns)
+        public void CreateTable(string tableName, Dictionary<string, string> columns, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var columnsDefinition = string.Join(", ", columns.Select(kv => $"{kv.Key} {kv.Value}"));
@@ -28,9 +28,9 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public void AddRecord(string tableName, Dictionary<string, object> record)
+        public void AddRecord(string tableName, Dictionary<string, object> record, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var columns = string.Join(", ", record.Keys);
@@ -40,9 +40,9 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public IEnumerable<dynamic> GetAllRecords(string tableName)
+        public IEnumerable<dynamic> GetAllRecords(string tableName, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var selectQuery = $"SELECT * FROM {tableName}";
@@ -50,9 +50,9 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public dynamic GetRecordById(string tableName, object id)
+        public dynamic GetRecordById(string tableName, object id, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var selectQuery = $"SELECT * FROM {tableName} WHERE {DefaultIdColumn} = @Id";
@@ -60,9 +60,9 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public void UpdateRecord(string tableName, object id, Dictionary<string, object> updatedValues)
+        public void UpdateRecord(string tableName, object id, Dictionary<string, object> updatedValues, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var setClause = string.Join(", ", updatedValues.Keys.Select(k => $"{k} = @{k}"));
@@ -72,9 +72,9 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public void DeleteRecord(string tableName, object id)
+        public void DeleteRecord(string tableName, object id, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 var deleteQuery = $"DELETE FROM {tableName} WHERE {DefaultIdColumn} = @Id";

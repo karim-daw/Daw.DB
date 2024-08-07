@@ -13,18 +13,18 @@ namespace Daw.DB.Data.Services
             _connectionFactory = connectionFactory;
         }
 
-        public IEnumerable<dynamic> ExecuteQuery(string sql, object parameters = null)
+        public IEnumerable<dynamic> ExecuteQuery(string sql, string connectionString, object parameters = null)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 return db.Query(sql, parameters);
             }
         }
 
-        public void ExecuteCommand(string sql, object parameters = null)
+        public void ExecuteCommand(string sql, string connectionString, object parameters = null)
         {
-            using (var db = _connectionFactory.CreateConnection())
+            using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
                 db.Execute(sql, parameters);
