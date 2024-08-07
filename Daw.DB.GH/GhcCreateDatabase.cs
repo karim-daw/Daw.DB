@@ -3,23 +3,23 @@ using Daw.DB.Data.Interfaces;
 using Grasshopper.Kernel;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Windows.Forms;
 
 namespace Daw.DB.GH
 {
-    public class DB_GhComponent : GH_Component
+    public class GhcCreateDatabase : GH_Component
     {
         private readonly IGhClientApi _ghClientApi;
 
-        public DB_GhComponent()
-          : base("DB_GhComponent", "DB",
+        public GhcCreateDatabase()
+          : base("CreateDatabase", "CD",
             "Creates and initializes a database",
             "Category", "Subcategory")
         {
             // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
             _ghClientApi = ApiFactory.GetGhClientApi();
         }
-
-        // TODO: Create ost build settings robust
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -44,7 +44,6 @@ namespace Daw.DB.GH
             bool createRecord = false;
             string databaseName = null;
             string tableName = null;
-            // create empty lists to store the record keys 
             List<string> recordKeys = new List<string>();
             List<string> recordValues = new List<string>();
 
@@ -60,41 +59,80 @@ namespace Daw.DB.GH
             // Create the database
             if (createDatabase)
             {
-                string result = _ghClientApi.InitializeDatabase(GetDatabasePath(databaseName));
+                string result = CreateDatabase(databaseName);
                 DA.SetData(0, result);
             }
 
             // Create the table
             if (createTable)
             {
-                var columns = new Dictionary<string, string>();
-                for (int i = 0; i < recordKeys.Count; i++)
-                {
-                    columns.Add(recordKeys[i], recordValues[i]);
-                }
-                string result = _ghClientApi.CreateTable(tableName, columns);
+                string result = CreateTable(tableName, recordKeys, recordValues);
                 DA.SetData(0, result);
             }
-
 
             // Add a record to the table
             if (createRecord)
             {
-                var record = new Dictionary<string, object>();
-                for (int i = 0; i < recordKeys.Count; i++)
-                {
-                    record.Add(recordKeys[i], recordValues[i]);
-                }
-                string result = _ghClientApi.AddDictionaryRecord(tableName, record);
+                string result = CreateRecord(tableName, recordKeys, recordValues);
                 DA.SetData(0, result);
             }
         }
 
 
+        // Wrapper methods
+
+
+        private string CreateDatabase(string databaseName)
+        {
+            return _ghClientApi.InitializeDatabase(GetDatabasePath(databaseName));
+        }
+
+        private string CreateRecord(string tableName, List<string> recordKeys, List<string> recordValues)
+        {
+            var record = new Dictionary<string, object>();
+            for (int i = 0; i < recordKeys.Count; i++)
+            {
+                record.Add(recordKeys[i], recordValues[i]);
+            }
+            string result = _ghClientApi.AddDictionaryRecord(tableName, record);
+            return result;
+        }
+
+        private string CreateTable(string tableName, List<string> recordKeys, List<string> recordValues)
+        {
+            var columns = new Dictionary<string, string>();
+            for (int i = 0; i < recordKeys.Count; i++)
+            {
+                columns.Add(recordKeys[i], recordValues[i]);
+            }
+            string result = _ghClientApi.CreateTable(tableName, columns);
+            return result;
+        }
+
+
+        // Helper methods
+
+
         private string GetDatabasePath(string databaseName)
         {
-            return $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\{databaseName}.db";
+            // Access the current Grasshopper document
+            var ghDoc = Grasshopper.Instances.ActiveCanvas.Document;
+
+            // Check if the document is saved
+            if (ghDoc.IsFilePathDefined)
+            {
+                // Get the directory of the GH file
+                string ghDirectory = Path.GetDirectoryName(ghDoc.FilePath);
+                return Path.Combine(ghDirectory, $"{databaseName}.db");
+            }
+            else
+            {
+                // Prompt the user to save the GH file
+                MessageBox.Show("Please save the Grasshopper file first.", "Save Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return null;
+            }
         }
+
 
         protected override System.Drawing.Bitmap Icon => null; // Add an icon if available
 
