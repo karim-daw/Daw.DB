@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
@@ -40,17 +44,32 @@
     <!-- Copy the .gha file -->
     <Copy SourceFiles="$(OutputPath)$(ProjectName).gha" DestinationFolder="$(GrasshopperLibrariesDir)" />
 
-    <!-- Copy all files and subfolders from Daw.DB.Data's output directory -->
+    <!-- Copy all files from Daw.DB.Data's output directory, excluding architecture-specific files -->
     <ItemGroup>
-      <ProjectDependencies Include="..\Daw.DB.Data\bin\$(Configuration)\**\*.*" />
+      <ProjectDependencies Include="..\Daw.DB.GH\bin\$(Configuration)\**\*.*"
+                           Exclude="..\Daw.DB.GH\bin\$(Configuration)\x64\**;..\Daw.DB.GH\bin\$(Configuration)\x86\**;$(OutputPath)x64\**;$(OutputPath)x86\**" />
     </ItemGroup>
     <Copy SourceFiles="@(ProjectDependencies)" DestinationFolder="$(GrasshopperLibrariesDir)" />
 
-    <!-- Copy the entire runtimes folder including subfolders -->
-    <ItemGroup>
-      <RuntimeDependencies Include="runtimes\**\*.*" />
+    <!-- Handle x64 folder -->
+    <ItemGroup Condition="Exists('$(OutputPath)x64')">
+      <X64Files Include="$(OutputPath)x64\**\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(RuntimeDependencies)" DestinationFolder="$(GrasshopperLibrariesDir)" />
+    <MakeDir Directories="$(GrasshopperLibrariesDir)\x64" Condition="@(X64Files) != ''" />
+    <Copy SourceFiles="@(X64Files)" DestinationFolder="$(GrasshopperLibrariesDir)\x64" Condition="@(X64Files) != ''" />
+
+    <!-- Handle x86 folder -->
+    <ItemGroup Condition="Exists('$(OutputPath)x86')">
+      <X86Files Include="$(OutputPath)x86\**\*.*" />
+    </ItemGroup>
+    <MakeDir Directories="$(GrasshopperLibrariesDir)\x86" Condition="@(X86Files) != ''" />
+    <Copy SourceFiles="@(X86Files)" DestinationFolder="$(GrasshopperLibrariesDir)\x86" Condition="@(X86Files) != ''" />
+
+    <!-- Delete any architecture-specific interop files from the top level if they were accidentally copied -->
+    <ItemGroup>
+      <TopLevelInteropFiles Include="$(GrasshopperLibrariesDir)\SQLite.Interop.dll" />
+    </ItemGroup>
+    <Delete Files="@(TopLevelInteropFiles)" Condition="Exists('%(TopLevelInteropFiles.FullPath)')" />
   </Target>
 
 </Project>
