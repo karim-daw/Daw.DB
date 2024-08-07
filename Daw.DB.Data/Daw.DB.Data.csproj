@@ -143,6 +143,7 @@
     <Compile Include="APIs\ClientApi.cs" />
     <Compile Include="APIs\GhClientApi.cs" />
     <Compile Include="Interfaces\IClientApi.cs" />
+    <Compile Include="Interfaces\IDatabaseCreationFactory.cs" />
     <Compile Include="Interfaces\IDatabaseConnectionFactory.cs" />
     <Compile Include="Interfaces\IDictionaryHandler.cs" />
     <Compile Include="Interfaces\IEntity.cs" />
