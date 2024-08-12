@@ -65,13 +65,9 @@ namespace Daw.DB.GH
                     return $"Database already exists at {databasePath}";
                 }
 
-                // TODO: make sure to figure out creation vs initi paradigm, still confused hereS
-                // Create the database file
-                _ghClientApi.CreateDatabase(databasePath);
-
                 // Initialize the database using the connection string
                 string connectionString = $"Data Source={databasePath};Version=3;";
-                _ghClientApi.InitializeDatabase(connectionString);
+                _ghClientApi.CreateConnection(connectionString);
 
                 return $"Database created and initialized at {databasePath}";
             }
