@@ -8,11 +8,11 @@ namespace Daw.DB.Data.Interfaces
         #region Database Operations
 
         /// <summary>
-        /// Initializes a new database with the given name.
+        /// Initializes a new database connection with the given name.
         /// </summary>
         /// <param name="connectionString"></param>
         /// <returns>Message output relating to success or failure of db operatations</returns>
-        string InitializeDatabase(string connectionString); // Add this method
+        string CreateConnection(string connectionString); // Add this method
 
         #endregion
 
