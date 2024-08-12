@@ -21,11 +21,11 @@ namespace Daw.DB.Data.APIs
         }
 
         /// <summary>
-        /// Initializes a new database with the given name.
+        /// Creates a connection to a new database with the given name.
         /// </summary>
         /// <param name="databasePath"></param>
         /// <returns>Message output relating to success or failure of db operatations</returns>
-        public string InitializeDatabase(string connectionString)
+        public string CreateConnection(string connectionString)
         {
             try
             {
@@ -34,7 +34,7 @@ namespace Daw.DB.Data.APIs
                 {
                     db.Open();
                 }
-                return $"Database created at '{connectionString}'  successfully.";
+                return $"Database connection created at '{connectionString}'  successfully.";
             }
             catch (System.Exception ex)
             {
@@ -92,7 +92,15 @@ namespace Daw.DB.Data.APIs
         /// <returns></returns>
         public IEnumerable<dynamic> GetAllDictionaryRecords(string tableName, string connectionString)
         {
-            return _dictionaryHandler.GetAllRecords(tableName, connectionString);
+            try
+            {
+                var records = _dictionaryHandler.GetAllRecords(tableName, connectionString);
+                return records;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error retrieving records from table {tableName}: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -103,6 +111,7 @@ namespace Daw.DB.Data.APIs
         /// <returns></returns>
         public dynamic GetDictionaryRecordById(string tableName, object id, string connectionString)
         {
+            // TODO: add error handling
             return _dictionaryHandler.GetRecordById(tableName, id, connectionString);
         }
 
