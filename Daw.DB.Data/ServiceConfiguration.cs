@@ -14,7 +14,6 @@ namespace Daw.DB.Data
 
             // Register services with a placeholder connection factory
             services.AddSingleton<IDatabaseConnectionFactory, SQLiteConnectionFactory>();
-            services.AddSingleton<IDatabaseCreationFactory, SQLiteConnectionFactory>();
             services.AddSingleton<ISqlService, SqlService>();
             services.AddSingleton<IDictionaryHandler, DictionaryHandler>();
             services.AddSingleton<IJsonHandler, JsonHandler>();
