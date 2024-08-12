@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Daw.DB.Data", "Daw.DB.Data\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Daw.DB.GH", "Daw.DB.GH\Daw.DB.GH.csproj", "{73E320BA-680F-43D2-B84C-1FABBDF9C53F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Daw.DB.Tests", "Daw.DB.Tests\Daw.DB.Tests.csproj", "{9C1BF072-42B7-409C-BE82-8B67B0315C86}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{73E320BA-680F-43D2-B84C-1FABBDF9C53F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73E320BA-680F-43D2-B84C-1FABBDF9C53F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73E320BA-680F-43D2-B84C-1FABBDF9C53F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C1BF072-42B7-409C-BE82-8B67B0315C86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C1BF072-42B7-409C-BE82-8B67B0315C86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C1BF072-42B7-409C-BE82-8B67B0315C86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C1BF072-42B7-409C-BE82-8B67B0315C86}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
