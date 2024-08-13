@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Daw.DB.Data.Interfaces;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 
 namespace Daw.DB.Data.Services
@@ -22,8 +23,37 @@ namespace Daw.DB.Data.Services
             using (var db = _connectionFactory.CreateConnection(connectionString))
             {
                 db.Open();
+
+                // Try to query the table to see if it exists
+                var tableExistsQuery = $"SELECT 1 FROM {tableName} LIMIT 1";
+                try
+                {
+                    db.Execute(tableExistsQuery);
+                    // If we reach this point, the table exists
+                    throw new System.Exception($"Table {tableName} already exists.");
+                }
+                catch (System.Data.SqlClient.SqlException ex) when (ex.Number == 208)
+                {
+                    // SQL Server specific: 208 means table does not exist
+
+                }
+                catch (System.Data.SQLite.SQLiteException ex) when (ex.ResultCode == SQLiteErrorCode.Error)
+                {
+                    // SQLite specific: code 1 or 'SQL error' often indicates a table does not exist
+                }
+                catch (System.Exception ex)
+                {
+                    // For other databases, if the exception is not about the table missing, rethrow it
+                    if (!ex.Message.Contains("does not exist") && !ex.Message.Contains("no such table"))
+                    {
+                        throw;
+                    }
+                    // Otherwise, it means the table does not exist, so we continue
+                }
+
                 var columnsDefinition = string.Join(", ", columns.Select(kv => $"{kv.Key} {kv.Value}"));
-                var createTableQuery = $"CREATE TABLE IF NOT EXISTS {tableName} ({columnsDefinition})";
+                var createTableQuery = $"CREATE TABLE {tableName} ({columnsDefinition})";
+
                 try
                 {
                     db.Execute(createTableQuery);
@@ -34,6 +64,7 @@ namespace Daw.DB.Data.Services
                 }
             }
         }
+
 
         public void AddRecord(string tableName, Dictionary<string, object> record, string connectionString)
         {
