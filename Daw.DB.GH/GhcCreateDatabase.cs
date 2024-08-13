@@ -2,7 +2,6 @@ using Daw.DB.Data;
 using Daw.DB.Data.Interfaces;
 using Grasshopper.Kernel;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 
@@ -12,6 +11,7 @@ namespace Daw.DB.GH
     {
         private readonly IGhClientApi _ghClientApi;
 
+        // TODO: update the component name and description and categories
         public GhcCreateDatabase()
           : base("CreateDatabase", "CD",
             "Creates and initializes a database",
@@ -25,11 +25,6 @@ namespace Daw.DB.GH
         {
             pManager.AddBooleanParameter("Create", "C", "Boolean to trigger database creation", GH_ParamAccess.item);
             pManager.AddTextParameter("Database Name", "DB", "Name of the database to create", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("Create Table", "CT", "Boolean to trigger table creation", GH_ParamAccess.item);
-            pManager.AddTextParameter("Table Name", "T", "Name of the table to create", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("Add Record", "AR", "Boolean to trigger record addition", GH_ParamAccess.item);
-            pManager.AddTextParameter("RecordKeys", "RK", "Record KEYS to add to the table", GH_ParamAccess.list);
-            pManager.AddTextParameter("RecordValues", "RV", "Record VALUES to add to the table", GH_ParamAccess.list);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -40,79 +35,50 @@ namespace Daw.DB.GH
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             bool createDatabase = false;
-            bool createTable = false;
-            bool createRecord = false;
             string databaseName = null;
-            string tableName = null;
-            List<string> recordKeys = new List<string>();
-            List<string> recordValues = new List<string>();
 
             // Retrieve input data
             if (!DA.GetData(0, ref createDatabase)) return;
             if (!DA.GetData(1, ref databaseName)) return;
-            if (!DA.GetData(2, ref createTable)) return;
-            if (!DA.GetData(3, ref tableName)) return;
-            if (!DA.GetData(4, ref createRecord)) return;
-            if (!DA.GetDataList(5, recordKeys)) return;
-            if (!DA.GetDataList(6, recordValues)) return;
 
-            // Create the database
+            string databasePath = GetDatabasePath(databaseName);
+            if (string.IsNullOrWhiteSpace(databasePath))
+            {
+                DA.SetData(0, "Database name is invalid.");
+                return;
+            }
+
             if (createDatabase)
             {
-                string result = CreateDatabase(databaseName);
-                DA.SetData(0, result);
-            }
-
-            // Create the table
-            if (createTable)
-            {
-                string result = CreateTable(tableName, recordKeys, recordValues);
-                DA.SetData(0, result);
-            }
-
-            // Add a record to the table
-            if (createRecord)
-            {
-                string result = CreateRecord(tableName, recordKeys, recordValues);
+                string result = CreateAndInitializeDatabase(databasePath);
                 DA.SetData(0, result);
             }
         }
 
-
-        // Wrapper methods
-
-
-        private string CreateDatabase(string databaseName)
+        // Wrapper method
+        private string CreateAndInitializeDatabase(string databasePath)
         {
-            return _ghClientApi.InitializeDatabase(GetDatabasePath(databaseName));
-        }
-
-        private string CreateRecord(string tableName, List<string> recordKeys, List<string> recordValues)
-        {
-            var record = new Dictionary<string, object>();
-            for (int i = 0; i < recordKeys.Count; i++)
+            try
             {
-                record.Add(recordKeys[i], recordValues[i]);
-            }
-            string result = _ghClientApi.AddDictionaryRecord(tableName, record);
-            return result;
-        }
+                // Check if the database file already exists
+                if (File.Exists(databasePath))
+                {
+                    return $"Database already exists at {databasePath}, delete it if you want to overwrite the data";
+                }
 
-        private string CreateTable(string tableName, List<string> recordKeys, List<string> recordValues)
-        {
-            var columns = new Dictionary<string, string>();
-            for (int i = 0; i < recordKeys.Count; i++)
+                // Initialize the database using the connection string
+                string connectionString = $"Data Source={databasePath};Version=3;";
+                _ghClientApi.CreateConnection(connectionString);
+
+                return $"Database created and initialized at {databasePath}";
+            }
+            catch (Exception ex)
             {
-                columns.Add(recordKeys[i], recordValues[i]);
+                return $"Error creating and initializing database: {ex.Message}";
             }
-            string result = _ghClientApi.CreateTable(tableName, columns);
-            return result;
         }
 
-
-        // Helper methods
-
-
+        // Helper method
         private string GetDatabasePath(string databaseName)
         {
             // Access the current Grasshopper document
@@ -127,12 +93,11 @@ namespace Daw.DB.GH
             }
             else
             {
-                // Prompt the user to save the GH file
+                // Prompt the user to save the Grasshopper file
                 MessageBox.Show("Please save the Grasshopper file first.", "Save Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return null;
             }
         }
-
 
         protected override System.Drawing.Bitmap Icon => null; // Add an icon if available
 

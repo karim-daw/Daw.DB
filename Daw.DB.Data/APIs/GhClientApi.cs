@@ -6,43 +6,39 @@ namespace Daw.DB.Data.APIs
 {
     public class GhClientApi : IGhClientApi
     {
-        private IDatabaseConnectionFactory _connectionFactory;
+        private readonly IDatabaseConnectionFactory _connectionFactory;
         private readonly ISqlService _sqlService;
-        private readonly IJsonHandler _jsonHandler;
         private readonly IDictionaryHandler _dictionaryHandler;
 
         public GhClientApi(
             IDatabaseConnectionFactory connectionFactory,
             ISqlService sqlService,
-            IJsonHandler jsonHandler,
             IDictionaryHandler dictionaryHandler)
         {
             _connectionFactory = connectionFactory;
             _sqlService = sqlService;
-            _jsonHandler = jsonHandler;
             _dictionaryHandler = dictionaryHandler;
         }
 
         /// <summary>
-        /// Initializes a new database with the given name.
+        /// Creates a connection to a new database with the given name.
         /// </summary>
         /// <param name="databasePath"></param>
         /// <returns>Message output relating to success or failure of db operatations</returns>
-        public string InitializeDatabase(string databasePath)
+        public string CreateConnection(string connectionString)
         {
             try
             {
-                _connectionFactory.SetConnectionString(databasePath);
                 // Create the database connection to ensure the database file is created
-                using (var db = _connectionFactory.CreateConnection())
+                using (var db = _connectionFactory.CreateConnection(connectionString))
                 {
                     db.Open();
                 }
-                return $"Database created at '{databasePath}'  successfully.";
+                return $"Database connection created at '{connectionString}'  successfully.";
             }
-            catch (System.Exception ex)
+            catch (System.Exception _)
             {
-                return $"Error: {ex.Message}";
+                throw;
             }
         }
 
@@ -52,16 +48,17 @@ namespace Daw.DB.Data.APIs
         /// <param name="tableName"></param>
         /// <param name="columns"></param>
         /// <returns>Message output relating to success or failure of table operations</returns>
-        public string CreateTable(string tableName, Dictionary<string, string> columns)
+        public string CreateTable(string tableName, Dictionary<string, string> columns, string connectionString)
         {
             try
             {
-                _dictionaryHandler.CreateTable(tableName, columns);
+                _dictionaryHandler.CreateTable(tableName, columns, connectionString);
                 return $"Table '{tableName}' created successfully.";
             }
             catch (System.Exception ex)
             {
-                return $"Error: {ex.Message}";
+                throw new System.Exception($"Error creating table '{tableName}': {ex.Message}");
+                //return $"Error: {ex.Message}";
             }
         }
 
@@ -71,12 +68,12 @@ namespace Daw.DB.Data.APIs
         /// <param name="tableName"></param>
         /// <param name="record"></param>
         /// <returns>Message output relating to success or failure of table operations</returns>
-        public string AddDictionaryRecord(string tableName, Dictionary<string, object> record)
+        public string AddDictionaryRecord(string tableName, Dictionary<string, object> record, string connectionString)
         {
             try
             {
                 // add the record to the table
-                _dictionaryHandler.AddRecord(tableName, record);
+                _dictionaryHandler.AddRecord(tableName, record, connectionString);
 
                 // return the record added message wth the record details as a string
                 var stringRecord = record.ToString();
@@ -94,9 +91,17 @@ namespace Daw.DB.Data.APIs
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
-        public IEnumerable<dynamic> GetAllDictionaryRecords(string tableName)
+        public IEnumerable<dynamic> GetAllDictionaryRecords(string tableName, string connectionString)
         {
-            return _dictionaryHandler.GetAllRecords(tableName);
+            try
+            {
+                var records = _dictionaryHandler.GetAllRecords(tableName, connectionString);
+                return records;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error retrieving records from table {tableName}: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -105,9 +110,10 @@ namespace Daw.DB.Data.APIs
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public dynamic GetDictionaryRecordById(string tableName, object id)
+        public dynamic GetDictionaryRecordById(string tableName, object id, string connectionString)
         {
-            return _dictionaryHandler.GetRecordById(tableName, id);
+            // TODO: add error handling
+            return _dictionaryHandler.GetRecordById(tableName, id, connectionString);
         }
 
         /// <summary>
@@ -116,9 +122,9 @@ namespace Daw.DB.Data.APIs
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         /// <param name="record"></param>
-        public void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record)
+        public void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record, string connectionString)
         {
-            _dictionaryHandler.UpdateRecord(tableName, id, record);
+            _dictionaryHandler.UpdateRecord(tableName, id, record, connectionString);
         }
 
 
@@ -127,9 +133,9 @@ namespace Daw.DB.Data.APIs
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="id"></param>
-        public void DeleteRecord(string tableName, object id)
+        public void DeleteRecord(string tableName, object id, string connectionString)
         {
-            _dictionaryHandler.DeleteRecord(tableName, id);
+            _dictionaryHandler.DeleteRecord(tableName, id, connectionString);
         }
 
         /// <summary>
@@ -138,9 +144,9 @@ namespace Daw.DB.Data.APIs
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public IEnumerable<dynamic> ExecuteQuery(string sql, object parameters = null)
+        public IEnumerable<dynamic> ExecuteQuery(string sql, string connectionString, object parameters = null)
         {
-            return _sqlService.ExecuteQuery(sql, parameters);
+            return _sqlService.ExecuteQuery(sql, connectionString, parameters);
         }
 
         /// <summary>
@@ -148,9 +154,9 @@ namespace Daw.DB.Data.APIs
         /// </summary>
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
-        public void ExecuteCommand(string sql, object parameters = null)
+        public void ExecuteCommand(string sql, string connectionString, object parameters = null)
         {
-            _sqlService.ExecuteCommand(sql, parameters);
+            _sqlService.ExecuteCommand(sql, connectionString, parameters);
         }
     }
 }

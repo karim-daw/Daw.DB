@@ -15,24 +15,24 @@ namespace Daw.DB.Data.Services
                 _dictionaryHandler = dictionaryHandler;
             }
 
-            public void AddRecordFromJson(string tableName, string jsonRecord)
+            public void AddRecordFromJson(string tableName, string jsonRecord, string connectionString)
             {
                 // using system.text.json
                 var record = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonRecord);
-                _dictionaryHandler.AddRecord(tableName, record);
+                _dictionaryHandler.AddRecord(tableName, record, connectionString);
             }
 
-            public void AddTableFromJson(string tableName, string jsonSchema)
+            public void AddTableFromJson(string tableName, string jsonSchema, string connectionString)
             {
                 var columns = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonSchema);
-                _dictionaryHandler.CreateTable(tableName, columns);
+                _dictionaryHandler.CreateTable(tableName, columns, connectionString);
             }
 
             // update record from json
-            public void UpdateRecordFromJson(string tableName, object id, string jsonRecord)
+            public void UpdateRecordFromJson(string tableName, object id, string jsonRecord, string connectionString)
             {
                 var record = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonRecord);
-                _dictionaryHandler.UpdateRecord(tableName, id, record);
+                _dictionaryHandler.UpdateRecord(tableName, id, record, connectionString);
             }
         }
     }

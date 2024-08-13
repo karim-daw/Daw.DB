@@ -8,11 +8,11 @@ namespace Daw.DB.Data.Interfaces
         #region Database Operations
 
         /// <summary>
-        /// Initializes a new database with the given name.
+        /// Initializes a new database connection with the given name.
         /// </summary>
-        /// <param name="databaseName"></param>
+        /// <param name="connectionString"></param>
         /// <returns>Message output relating to success or failure of db operatations</returns>
-        string InitializeDatabase(string databaseName); // Add this method
+        string CreateConnection(string connectionString); // Add this method
 
         #endregion
 
@@ -24,8 +24,9 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="columns"></param>
+        /// <param name="connectionString"></param>
         /// <returns>Message output relating to success or failure of table operations</returns>
-        string CreateTable(string tableName, Dictionary<string, string> columns);
+        string CreateTable(string tableName, Dictionary<string, string> columns, string connectionString);
 
 
         #endregion
@@ -39,8 +40,9 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="record"></param>
+        /// <param name="connectionString"></param>"
         /// <returns>Message output relating to success or failure of record operations</returns>
-        string AddDictionaryRecord(string tableName, Dictionary<string, object> record);
+        string AddDictionaryRecord(string tableName, Dictionary<string, object> record, string connectionString);
 
 
         #endregion
@@ -52,8 +54,9 @@ namespace Daw.DB.Data.Interfaces
         /// This expects a dictionary of column names and their values.
         /// </summary>
         /// <param name="tableName"></param>
+        /// <param name="connectionString"></param>
         /// <returns></returns>
-        IEnumerable<dynamic> GetAllDictionaryRecords(string tableName);
+        IEnumerable<dynamic> GetAllDictionaryRecords(string tableName, string connectionString);
 
 
         /// <summary>
@@ -62,8 +65,9 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="id"></param>
+        /// <param name="connectionString"></param>
         /// <returns></returns>
-        dynamic GetDictionaryRecordById(string tableName, object id);
+        dynamic GetDictionaryRecordById(string tableName, object id, string connectionString);
 
         #endregion
 
@@ -77,7 +81,8 @@ namespace Daw.DB.Data.Interfaces
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         /// <param name="record"></param>
-        void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record);
+        /// <param name="connectionString"></param>
+        void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record, string connectionString);
 
         #endregion
 
@@ -89,7 +94,8 @@ namespace Daw.DB.Data.Interfaces
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="id"></param>
-        void DeleteRecord(string tableName, object id);
+        /// <param name="connectionString"></param>
+        void DeleteRecord(string tableName, object id, string connectionString);
 
         #endregion
 
