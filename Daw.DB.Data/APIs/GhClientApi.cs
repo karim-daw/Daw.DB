@@ -36,9 +36,9 @@ namespace Daw.DB.Data.APIs
                 }
                 return $"Database connection created at '{connectionString}'  successfully.";
             }
-            catch (System.Exception ex)
+            catch (System.Exception _)
             {
-                return $"Error: {ex.Message}";
+                throw;
             }
         }
 
@@ -57,7 +57,8 @@ namespace Daw.DB.Data.APIs
             }
             catch (System.Exception ex)
             {
-                return $"Error: {ex.Message}";
+                throw new System.Exception($"Error creating table '{tableName}': {ex.Message}");
+                //return $"Error: {ex.Message}";
             }
         }
 
