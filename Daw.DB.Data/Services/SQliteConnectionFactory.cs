@@ -20,12 +20,10 @@ namespace Daw.DB.Data.Services
 
             // extract db path from connection string and check if the file exists
             string dbPath = ExtractDbPath(connectionString);
-            if (!File.Exists(dbPath))
-            {
-                throw new FileNotFoundException($"Database file not found at {dbPath}");
-            }
-
-
+            //if (File.Exists(dbPath))
+            //{
+            //    throw new FileNotFoundException($"Database file found at {dbPath}, delete it of you want to overwrite the data");
+            //}
 
             return new SQLiteConnection(connectionString);
         }

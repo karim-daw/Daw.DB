@@ -11,6 +11,7 @@ namespace Daw.DB.GH
     {
         private readonly IGhClientApi _ghClientApi;
 
+        // TODO: update the component name and description and categories
         public GhcCreateDatabase()
           : base("CreateDatabase", "CD",
             "Creates and initializes a database",
@@ -43,7 +44,7 @@ namespace Daw.DB.GH
             string databasePath = GetDatabasePath(databaseName);
             if (string.IsNullOrWhiteSpace(databasePath))
             {
-                DA.SetData(0, "Database path is invalid.");
+                DA.SetData(0, "Database name is invalid.");
                 return;
             }
 
@@ -62,7 +63,7 @@ namespace Daw.DB.GH
                 // Check if the database file already exists
                 if (File.Exists(databasePath))
                 {
-                    return $"Database already exists at {databasePath}";
+                    return $"Database already exists at {databasePath}, delete it if you want to overwrite the data";
                 }
 
                 // Initialize the database using the connection string

@@ -70,16 +70,17 @@ namespace Daw.DB.GH
             try
             {
                 _ghClientApi.CreateTable(tableName, columns, connectionString);
-                return "Table created successfully.";
             }
             catch (Exception ex)
             {
-                return $"Error creating table: {ex.Message}";
+                return $"Error creating table in GH component: {ex.Message}";
             }
+            return "Table created successfully.";
+
         }
 
         protected override System.Drawing.Bitmap Icon => null; // Add an icon if available
 
-        public override Guid ComponentGuid => new Guid("85e34b87-35a5-4dde-a671-2af6ea21b242");
+        public override Guid ComponentGuid => new Guid("0e5c2e9d-9489-4872-ae9b-5d8349ba2459");
     }
 }

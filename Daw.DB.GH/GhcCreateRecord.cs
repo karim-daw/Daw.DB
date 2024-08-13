@@ -79,6 +79,6 @@ namespace Daw.DB.GH
 
         protected override System.Drawing.Bitmap Icon => null; // Add an icon if available
 
-        public override Guid ComponentGuid => new Guid("85e34b87-35a5-4dde-a671-2af6ea21b242");
+        public override Guid ComponentGuid => new Guid("4703fb0f-3b90-4d88-b533-c793b3ca5522");
     }
 }
