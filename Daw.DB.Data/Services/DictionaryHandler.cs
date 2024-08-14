@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using Daw.DB.Data.Interfaces;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.Linq;
 
 namespace Daw.DB.Data.Services
@@ -31,15 +30,6 @@ namespace Daw.DB.Data.Services
                     db.Execute(tableExistsQuery);
                     // If we reach this point, the table exists
                     throw new System.Exception($"Table {tableName} already exists.");
-                }
-                catch (System.Data.SqlClient.SqlException ex) when (ex.Number == 208)
-                {
-                    // SQL Server specific: 208 means table does not exist
-
-                }
-                catch (System.Data.SQLite.SQLiteException ex) when (ex.ResultCode == SQLiteErrorCode.Error)
-                {
-                    // SQLite specific: code 1 or 'SQL error' often indicates a table does not exist
                 }
                 catch (System.Exception ex)
                 {
@@ -113,7 +103,19 @@ namespace Daw.DB.Data.Services
             {
                 db.Open();
                 var selectQuery = $"SELECT * FROM {tableName} WHERE {DefaultIdColumn} = @Id";
-                return db.QuerySingleOrDefault(selectQuery, new { Id = id });
+
+                dynamic record = null;
+
+                try
+                {
+                    record = db.QuerySingleOrDefault(selectQuery, new { Id = id });
+                }
+                catch (System.Exception ex)
+                {
+                    throw new System.Exception($"Error retrieving record from table {tableName}: {ex.Message}");
+                }
+
+                return record;
             }
         }
 
@@ -124,8 +126,19 @@ namespace Daw.DB.Data.Services
                 db.Open();
                 var setClause = string.Join(", ", updatedValues.Keys.Select(k => $"{k} = @{k}"));
                 var updateQuery = $"UPDATE {tableName} SET {setClause} WHERE {DefaultIdColumn} = @Id";
+
+                // Add the id to the dictionary so it can be used in the query
                 updatedValues[DefaultIdColumn] = id;
-                db.Execute(updateQuery, updatedValues);
+
+
+                try
+                {
+                    db.Execute(updateQuery, updatedValues);
+                }
+                catch (System.Exception ex)
+                {
+                    throw new System.Exception($"Error updating record in table {tableName}: {ex.Message}");
+                }
             }
         }
 
@@ -135,7 +148,14 @@ namespace Daw.DB.Data.Services
             {
                 db.Open();
                 var deleteQuery = $"DELETE FROM {tableName} WHERE {DefaultIdColumn} = @Id";
-                db.Execute(deleteQuery, new { Id = id });
+                try
+                {
+                    db.Execute(deleteQuery, new { Id = id });
+                }
+                catch (System.Exception ex)
+                {
+                    throw new System.Exception($"Error deleting record from table {tableName}: {ex.Message}");
+                }
             }
         }
     }
