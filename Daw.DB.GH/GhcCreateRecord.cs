@@ -13,7 +13,7 @@ namespace Daw.DB.GH
         public GhcCreateRecord()
           : base("CreateRecord", "CR",
             "Creates a record and inserts it into the database",
-            "Category", "Subcategory")
+            "Daw.DB", "CREATE")
         {
             // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
             _ghClientApi = ApiFactory.GetGhClientApi();
