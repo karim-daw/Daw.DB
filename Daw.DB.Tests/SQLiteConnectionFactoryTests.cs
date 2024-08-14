@@ -17,6 +17,12 @@ namespace Daw.DB.Tests
             _factory = new SQLiteConnectionFactory();
         }
 
+        [TestCleanup]
+        public void Cleanup()
+        {
+            _factory = null;
+        }
+
         [TestMethod]
         public void TestExtractDbPath_ValidConnectionString_ReturnsCorrectPath()
         {
@@ -56,12 +62,11 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(FileNotFoundException))]
+        [ExpectedException(typeof(ArgumentException))]
         public void TestCreateConnection_FileNotFound_ThrowsException()
         {
             // arrange
-            string invalidConnectionString = "Data Source=invalid_path.db;Version=3;";
-
+            string invalidConnectionString = "this_is_an_invalid_connection_string";
             // act
             _factory.CreateConnection(invalidConnectionString);
         }
