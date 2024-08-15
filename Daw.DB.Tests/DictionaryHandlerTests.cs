@@ -1,5 +1,6 @@
-﻿using Daw.DB.Data.Interfaces;
-using Daw.DB.Data.Services;
+﻿using Daw.DB.Data;
+using Daw.DB.Data.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -12,18 +13,19 @@ namespace Daw.DB.Tests
     [TestClass]
     public class DictionaryHandlerTests
     {
-        private DictionaryHandler _dictionaryHandler;
+        private IDictionaryHandler _dictionaryHandler;
         private string _databaseFilePath;
         private string _connectionString;
-        private IDatabaseConnectionFactory _connectionFactory;
 
         [TestInitialize]
         public void Setup()
         {
+            // Configure the DI container and resolve the DictionaryHandler
+            var serviceProvider = ServiceConfiguration.ConfigureServices();
+            _dictionaryHandler = serviceProvider.GetRequiredService<IDictionaryHandler>();
+
             _databaseFilePath = Path.GetTempFileName();
             _connectionString = $"Data Source={_databaseFilePath};Version=3;";
-            _connectionFactory = new SQLiteConnectionFactory();
-            _dictionaryHandler = new DictionaryHandler(_connectionFactory);
         }
 
         [TestCleanup]

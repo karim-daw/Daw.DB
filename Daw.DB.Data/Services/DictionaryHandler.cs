@@ -1,5 +1,4 @@
-﻿using Dapper;
-using Daw.DB.Data.Interfaces;
+﻿using Daw.DB.Data.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,155 +6,118 @@ namespace Daw.DB.Data.Services
 {
     public class DictionaryHandler : IDictionaryHandler
     {
-        private readonly IDatabaseConnectionFactory _connectionFactory;
+        private readonly ISqlService _sqlService;
 
         // Assuming "Id" is the primary key column name
         private const string DefaultIdColumn = "Id";
 
-        public DictionaryHandler(IDatabaseConnectionFactory connectionFactory)
+        public DictionaryHandler(ISqlService sqlService)
         {
-            _connectionFactory = connectionFactory;
+            _sqlService = sqlService;
         }
 
         public void CreateTable(string tableName, Dictionary<string, string> columns, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection(connectionString))
+            // Check if table already exists
+            var tableExistsQuery = $"SELECT name FROM sqlite_master WHERE type='table' AND name='{tableName}';";
+            var tableExists = _sqlService.ExecuteQuery(tableExistsQuery, connectionString).Any();
+
+            if (tableExists)
             {
-                db.Open();
+                throw new System.Exception($"Table {tableName} already exists.");
+            }
 
-                // Try to query the table to see if it exists
-                var tableExistsQuery = $"SELECT 1 FROM {tableName} LIMIT 1";
-                try
-                {
-                    db.Execute(tableExistsQuery);
-                    // If we reach this point, the table exists
-                    throw new System.Exception($"Table {tableName} already exists.");
-                }
-                catch (System.Exception ex)
-                {
-                    // For other databases, if the exception is not about the table missing, rethrow it
-                    if (!ex.Message.Contains("does not exist") && !ex.Message.Contains("no such table"))
-                    {
-                        throw;
-                    }
-                    // Otherwise, it means the table does not exist, so we continue
-                }
+            // Ensure the "Id" column is included and set as PRIMARY KEY
+            if (!columns.ContainsKey(DefaultIdColumn))
+            {
+                columns.Add(DefaultIdColumn, "INTEGER PRIMARY KEY AUTOINCREMENT");
+            }
 
-                var columnsDefinition = string.Join(", ", columns.Select(kv => $"{kv.Key} {kv.Value}"));
-                var createTableQuery = $"CREATE TABLE {tableName} ({columnsDefinition})";
+            var columnsDefinition = string.Join(", ", columns.Select(kv => $"{kv.Key} {kv.Value}"));
+            var createTableQuery = $"CREATE TABLE {tableName} ({columnsDefinition})";
 
-                try
-                {
-                    db.Execute(createTableQuery);
-                }
-                catch (System.Exception ex)
-                {
-                    throw new System.Exception($"Error creating table {tableName}: {ex.Message}");
-                }
+            try
+            {
+                _sqlService.ExecuteCommand(createTableQuery, connectionString);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error creating table {tableName}: {ex.Message}");
             }
         }
 
-
         public void AddRecord(string tableName, Dictionary<string, object> record, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection(connectionString))
+            var columns = string.Join(", ", record.Keys);
+            var values = string.Join(", ", record.Keys.Select(k => $"@{k}"));
+            var insertQuery = $"INSERT INTO {tableName} ({columns}) VALUES ({values})";
+
+            try
             {
-                db.Open();
-                var columns = string.Join(", ", record.Keys);
-                var values = string.Join(", ", record.Keys.Select(k => $"@{k}"));
-                var insertQuery = $"INSERT INTO {tableName} ({columns}) VALUES ({values})";
-                try
-                {
-                    db.Execute(insertQuery, record);
-                }
-                catch (System.Exception ex)
-                {
-                    throw new System.Exception($"Error adding record to table {tableName}: {ex.Message}");
-                }
+                _sqlService.ExecuteCommand(insertQuery, connectionString, record);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error adding record to table {tableName}: {ex.Message}");
             }
         }
 
         public IEnumerable<dynamic> GetAllRecords(string tableName, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection(connectionString))
+            var selectQuery = $"SELECT * FROM {tableName}";
+
+            try
             {
-                db.Open();
-                var selectQuery = $"SELECT * FROM {tableName}";
-
-                IEnumerable<dynamic> records = null;
-
-                try
-                {
-                    records = db.Query(selectQuery);
-                }
-                catch (System.Exception ex)
-                {
-                    throw new System.Exception($"Error retrieving records from table {tableName}: {ex.Message}");
-                }
-
-                return records;
+                return _sqlService.ExecuteQuery(selectQuery, connectionString);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error retrieving records from table {tableName}: {ex.Message}");
             }
         }
 
         public dynamic GetRecordById(string tableName, object id, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection(connectionString))
+            var selectQuery = $"SELECT * FROM {tableName} WHERE {DefaultIdColumn} = @Id";
+
+            try
             {
-                db.Open();
-                var selectQuery = $"SELECT * FROM {tableName} WHERE {DefaultIdColumn} = @Id";
-
-                dynamic record = null;
-
-                try
-                {
-                    record = db.QuerySingleOrDefault(selectQuery, new { Id = id });
-                }
-                catch (System.Exception ex)
-                {
-                    throw new System.Exception($"Error retrieving record from table {tableName}: {ex.Message}");
-                }
-
-                return record;
+                return _sqlService.ExecuteQuery(selectQuery, connectionString, new { Id = id }).FirstOrDefault();
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error retrieving record from table {tableName}: {ex.Message}");
             }
         }
 
         public void UpdateRecord(string tableName, object id, Dictionary<string, object> updatedValues, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection(connectionString))
+            var setClause = string.Join(", ", updatedValues.Keys.Select(k => $"{k} = @{k}"));
+            var updateQuery = $"UPDATE {tableName} SET {setClause} WHERE {DefaultIdColumn} = @Id";
+
+            updatedValues[DefaultIdColumn] = id;
+
+            try
             {
-                db.Open();
-                var setClause = string.Join(", ", updatedValues.Keys.Select(k => $"{k} = @{k}"));
-                var updateQuery = $"UPDATE {tableName} SET {setClause} WHERE {DefaultIdColumn} = @Id";
-
-                // Add the id to the dictionary so it can be used in the query
-                updatedValues[DefaultIdColumn] = id;
-
-
-                try
-                {
-                    db.Execute(updateQuery, updatedValues);
-                }
-                catch (System.Exception ex)
-                {
-                    throw new System.Exception($"Error updating record in table {tableName}: {ex.Message}");
-                }
+                _sqlService.ExecuteCommand(updateQuery, connectionString, updatedValues);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error updating record in table {tableName}: {ex.Message}");
             }
         }
 
         public void DeleteRecord(string tableName, object id, string connectionString)
         {
-            using (var db = _connectionFactory.CreateConnection(connectionString))
+            var deleteQuery = $"DELETE FROM {tableName} WHERE {DefaultIdColumn} = @Id";
+
+            try
             {
-                db.Open();
-                var deleteQuery = $"DELETE FROM {tableName} WHERE {DefaultIdColumn} = @Id";
-                try
-                {
-                    db.Execute(deleteQuery, new { Id = id });
-                }
-                catch (System.Exception ex)
-                {
-                    throw new System.Exception($"Error deleting record from table {tableName}: {ex.Message}");
-                }
+                _sqlService.ExecuteCommand(deleteQuery, connectionString, new { Id = id });
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error deleting record from table {tableName}: {ex.Message}");
             }
         }
     }
