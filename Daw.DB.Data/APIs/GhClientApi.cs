@@ -36,7 +36,7 @@ namespace Daw.DB.Data.APIs
                 }
                 return $"Database connection created at '{connectionString}'  successfully.";
             }
-            catch (System.Exception _)
+            catch (System.Exception)
             {
                 throw;
             }

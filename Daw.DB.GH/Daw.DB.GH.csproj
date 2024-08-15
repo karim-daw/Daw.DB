@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Grasshopper" Version="7.13.21348.13001" IncludeAssets="compile;build" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,8 +47,7 @@
 
     <!-- Copy all files from Daw.DB.Data's output directory, excluding architecture-specific files -->
     <ItemGroup>
-      <ProjectDependencies Include="..\Daw.DB.GH\bin\$(Configuration)\**\*.*"
-                           Exclude="..\Daw.DB.GH\bin\$(Configuration)\x64\**;..\Daw.DB.GH\bin\$(Configuration)\x86\**;$(OutputPath)x64\**;$(OutputPath)x86\**" />
+      <ProjectDependencies Include="..\Daw.DB.GH\bin\$(Configuration)\**\*.*" Exclude="..\Daw.DB.GH\bin\$(Configuration)\x64\**;..\Daw.DB.GH\bin\$(Configuration)\x86\**;$(OutputPath)x64\**;$(OutputPath)x86\**" />
     </ItemGroup>
     <Copy SourceFiles="@(ProjectDependencies)" DestinationFolder="$(GrasshopperLibrariesDir)" />
 
