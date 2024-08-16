@@ -56,7 +56,7 @@ namespace Daw.DB.GH
             }
         }
 
-        private string ReadRecord(string databasePath, string tableName, int recordId)
+        private string ReadRecord(string databasePath, string tableName, int? recordId)
         {
 
             string connectionString = $"Data Source={databasePath};Version=3;";
