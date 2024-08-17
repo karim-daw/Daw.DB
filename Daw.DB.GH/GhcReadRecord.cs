@@ -1,5 +1,6 @@
 ﻿using Daw.DB.Data;
 using Daw.DB.Data.Interfaces;
+using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
 
@@ -11,26 +12,21 @@ namespace Daw.DB.GH
 
         public GhcReadRecord()
           : base("ReadRecord", "RR",
-              "Reads a record of several records from the database",
+              "Read record from the database given a table name and id",
             "Daw.DB", "READ")
         {
             _ghClientApi = ApiFactory.GetGhClientApi();
         }
 
-        /// <summary>
-        /// Registers all the input parameters for this component.
-        /// </summary>
+
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("DatabasePath", "DBP", "Path to the database file", GH_ParamAccess.item);
             pManager.AddTextParameter("TableName", "TN", "Name of the table to insert the record into", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Read", "R", "Boolean to trigger record read", GH_ParamAccess.item);
             pManager.AddIntegerParameter("RecordId", "RID", "Record ID to read from the table", GH_ParamAccess.item);
         }
 
-        /// <summary>
-        /// Registers all the output parameters for this component.
-        /// </summary>
+
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("Result", "R", "Result of the database operation", GH_ParamAccess.item);
@@ -40,26 +36,23 @@ namespace Daw.DB.GH
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             bool readRecord = false;
-            string databasePath = null;
             string tableName = null;
             int recordId = 0;
 
-            if (!DA.GetData(0, ref databasePath)) return;
             if (!DA.GetData(1, ref tableName)) return;
             if (!DA.GetData(2, ref readRecord)) return;
             if (!DA.GetData(3, ref recordId)) return;
 
             if (readRecord)
             {
-                string result = ReadRecord(databasePath, tableName, recordId);
+                string result = ReadRecord(tableName, recordId);
                 DA.SetData(0, result);
             }
         }
 
-        private string ReadRecord(string databasePath, string tableName, int? recordId)
+        private string ReadRecord(string tableName, int? recordId)
         {
-
-            string connectionString = $"Data Source={databasePath};Version=3;";
+            string connectionString = SQLiteConnectionFactory.ConnectionString;
             try
             {
                 dynamic record = _ghClientApi.GetDictionaryRecordById(tableName, recordId, connectionString);

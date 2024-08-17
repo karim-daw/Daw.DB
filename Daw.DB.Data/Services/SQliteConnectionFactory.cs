@@ -8,7 +8,9 @@ namespace Daw.DB.Data.Services
 {
     public class SQLiteConnectionFactory : IDatabaseConnectionFactory
     {
-        // Constructor that takes a default connection string (optional)
+
+        static public string ConnectionString { get; set; }
+
 
         // Method to create a connection to an existing database using a connection string
         public IDbConnection CreateConnection(string connectionString)
@@ -17,14 +19,6 @@ namespace Daw.DB.Data.Services
             {
                 throw new ArgumentException("Connection string must be provided.", nameof(connectionString));
             }
-
-            // extract db path from connection string and check if the file exists
-            string dbPath = ExtractDbPath(connectionString);
-            //if (File.Exists(dbPath))
-            //{
-            //    throw new FileNotFoundException($"Database file found at {dbPath}, delete it of you want to overwrite the data");
-            //}
-
             return new SQLiteConnection(connectionString);
         }
 
@@ -67,5 +61,7 @@ namespace Daw.DB.Data.Services
 
             throw new ArgumentException("Invalid connection string. Data Source not found.", nameof(connectionString));
         }
+
+
     }
 }

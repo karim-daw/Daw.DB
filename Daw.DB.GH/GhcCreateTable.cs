@@ -1,5 +1,6 @@
 using Daw.DB.Data;
 using Daw.DB.Data.Interfaces;
+using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
 using System.Collections.Generic;
@@ -27,7 +28,6 @@ namespace Daw.DB.GH
             pManager.AddTextParameter("ColumnType", "CT",
                 "Column type (such as TEXT, TEXT NOT NULL, TEXT NOT NULL UNIQUE, INTEGER, INTEGER PRIMARY KEY AUTOINCREMENT, REAL, etc.). " +
                 "This allows you to dynamically define tables with various column names and types.", GH_ParamAccess.list);
-            pManager.AddTextParameter("DatabasePath", "DBP", "Path to the database file", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -41,24 +41,22 @@ namespace Daw.DB.GH
             string tableName = null;
             List<string> columnName = new List<string>();
             List<string> columnType = new List<string>();
-            string databasePath = null;
 
             // Retrieve input data
             if (!DA.GetData(0, ref createTable)) return;
             if (!DA.GetData(1, ref tableName)) return;
             if (!DA.GetDataList(2, columnName)) return;
             if (!DA.GetDataList(3, columnType)) return;
-            if (!DA.GetData(4, ref databasePath)) return;
 
             if (createTable)
             {
-                string result = CreateTable(tableName, columnName, columnType, databasePath);
+                string result = CreateTable(tableName, columnName, columnType);
                 DA.SetData(0, result);
             }
         }
 
         // Wrapper method
-        private string CreateTable(string tableName, List<string> columnNames, List<string> columnTypes, string databasePath)
+        private string CreateTable(string tableName, List<string> columnNames, List<string> columnTypes)
         {
             var columns = new Dictionary<string, string>();
             for (int i = 0; i < columnNames.Count; i++)
@@ -66,7 +64,14 @@ namespace Daw.DB.GH
                 columns.Add(columnNames[i], columnTypes[i]);
             }
 
-            string connectionString = $"Data Source={databasePath};Version=3;";
+            string connectionString = SQLiteConnectionFactory.ConnectionString;
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                return "Connection string has not been set yet. " +
+                    "You have to create a database first. Lay down a ConnectionString " +
+                    "component on the canvas, if a connection string is outputted";
+            }
+
             try
             {
                 _ghClientApi.CreateTable(tableName, columns, connectionString);

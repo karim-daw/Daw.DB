@@ -1,5 +1,6 @@
 using Daw.DB.Data;
 using Daw.DB.Data.Interfaces;
+using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
 using System.IO;
@@ -51,6 +52,8 @@ namespace Daw.DB.GH
             if (createDatabase)
             {
                 string result = CreateAndInitializeDatabase(databasePath);
+
+                // Output the result of the database operation
                 DA.SetData(0, result);
             }
         }
@@ -68,7 +71,11 @@ namespace Daw.DB.GH
 
                 // Initialize the database using the connection string
                 string connectionString = $"Data Source={databasePath};Version=3;";
+
                 _ghClientApi.CreateConnection(connectionString);
+
+                // save out the connection string for later use
+                SQLiteConnectionFactory.ConnectionString = connectionString;
 
                 return $"Database created and initialized at {databasePath}";
             }

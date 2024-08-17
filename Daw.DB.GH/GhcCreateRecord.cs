@@ -1,5 +1,6 @@
 using Daw.DB.Data;
 using Daw.DB.Data.Interfaces;
+using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,6 @@ namespace Daw.DB.GH
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("DatabasePath", "DBP", "Path to the database file", GH_ParamAccess.item);
             pManager.AddTextParameter("TableName", "TN", "Name of the table to insert the record into", GH_ParamAccess.item);
             pManager.AddBooleanParameter("AddRecord", "AR", "Boolean to trigger record addition", GH_ParamAccess.item);
             pManager.AddTextParameter("RecordKeys", "RK", "Record KEYS to add to the table", GH_ParamAccess.list);
@@ -36,13 +36,11 @@ namespace Daw.DB.GH
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             bool addRecord = false;
-            string databasePath = null;
             string tableName = null;
             List<string> recordKeys = new List<string>();
             List<string> recordValues = new List<string>();
 
             // Retrieve input data
-            if (!DA.GetData(0, ref databasePath)) return;
             if (!DA.GetData(1, ref tableName)) return;
             if (!DA.GetData(2, ref addRecord)) return;
             if (!DA.GetDataList(3, recordKeys)) return;
@@ -51,13 +49,13 @@ namespace Daw.DB.GH
             // Add a record to the table
             if (addRecord)
             {
-                string result = CreateRecord(databasePath, tableName, recordKeys, recordValues);
+                string result = CreateRecord(tableName, recordKeys, recordValues);
                 DA.SetData(0, result);
             }
         }
 
         // Wrapper method
-        private string CreateRecord(string databasePath, string tableName, List<string> recordKeys, List<string> recordValues)
+        private string CreateRecord(string tableName, List<string> recordKeys, List<string> recordValues)
         {
             var record = new Dictionary<string, object>();
             for (int i = 0; i < recordKeys.Count; i++)
@@ -65,7 +63,15 @@ namespace Daw.DB.GH
                 record.Add(recordKeys[i], recordValues[i]);
             }
 
-            string connectionString = $"Data Source={databasePath};Version=3;";
+
+            string connectionString = SQLiteConnectionFactory.ConnectionString;
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                return "Connection string has not been set yet. " +
+                    "You have to create a database first. Lay down a ConnectionString " +
+                    "component on the canvas, if a connection string is outputted";
+            }
             try
             {
                 _ghClientApi.AddDictionaryRecord(tableName, record, connectionString);
