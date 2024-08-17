@@ -7,16 +7,14 @@ namespace Daw.DB.Data.APIs
     public class GhClientApi : IGhClientApi
     {
         private readonly IDatabaseConnectionFactory _connectionFactory;
-        private readonly ISqlService _sqlService;
         private readonly IDictionaryHandler _dictionaryHandler;
+
 
         public GhClientApi(
             IDatabaseConnectionFactory connectionFactory,
-            ISqlService sqlService,
             IDictionaryHandler dictionaryHandler)
         {
             _connectionFactory = connectionFactory;
-            _sqlService = sqlService;
             _dictionaryHandler = dictionaryHandler;
         }
 
@@ -34,6 +32,8 @@ namespace Daw.DB.Data.APIs
                 {
                     db.Open();
                 }
+
+                // return the connection created message
                 return $"Database connection created at '{connectionString}'  successfully.";
             }
             catch (System.Exception)
@@ -138,25 +138,5 @@ namespace Daw.DB.Data.APIs
             _dictionaryHandler.DeleteRecord(tableName, id, connectionString);
         }
 
-        /// <summary>
-        /// Executes a query on the database.
-        /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        public IEnumerable<dynamic> ExecuteQuery(string sql, string connectionString, object parameters = null)
-        {
-            return _sqlService.ExecuteQuery(sql, connectionString, parameters);
-        }
-
-        /// <summary>
-        /// Executes a command on the database.
-        /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="parameters"></param>
-        public void ExecuteCommand(string sql, string connectionString, object parameters = null)
-        {
-            _sqlService.ExecuteCommand(sql, connectionString, parameters);
-        }
     }
 }
