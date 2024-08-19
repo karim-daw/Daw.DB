@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace Daw.DB.Data.Services
 {
-
+    // TODO: use transaction services to handle transactions 
     public interface IEntityHandler<T> where T : class, IEntity
     {
         void CreateTable(T entity, string connectionString);
