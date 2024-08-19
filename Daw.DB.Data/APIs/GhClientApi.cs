@@ -1,9 +1,19 @@
-using Daw.DB.Data.Interfaces;
+using Daw.DB.Data.Services;
 using System.Collections.Generic;
 
 
 namespace Daw.DB.Data.APIs
 {
+    public interface IGhClientApi
+    {
+        string CreateConnection(string connectionString);
+        string CreateTable(string tableName, Dictionary<string, string> columns, string connectionString);
+        string AddDictionaryRecord(string tableName, Dictionary<string, object> record, string connectionString);
+        IEnumerable<dynamic> GetAllDictionaryRecords(string tableName, string connectionString);
+        dynamic GetDictionaryRecordById(string tableName, object id, string connectionString);
+        void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record, string connectionString);
+        void DeleteRecord(string tableName, object id, string connectionString);
+    }
     public class GhClientApi : IGhClientApi
     {
         private readonly IDatabaseConnectionFactory _connectionFactory;
