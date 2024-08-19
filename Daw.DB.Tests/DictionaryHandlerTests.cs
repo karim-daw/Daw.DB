@@ -1,5 +1,5 @@
 ﻿using Daw.DB.Data;
-using Daw.DB.Data.Interfaces;
+using Daw.DB.Data.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -55,7 +55,6 @@ namespace Daw.DB.Tests
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
             {
-                { "Id", "INTEGER PRIMARY KEY" },
                 { "Name", "TEXT" }
             };
 
@@ -77,14 +76,13 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
+        [ExpectedException(typeof(InvalidOperationException))]
         public void CreateTable_ExistingTable_ThrowsException()
         {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
             {
-                { "Id", "INTEGER PRIMARY KEY" },
                 { "Name", "TEXT" }
             };
 
@@ -103,7 +101,6 @@ namespace Daw.DB.Tests
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
             {
-                { "Id", "INTEGER PRIMARY KEY" },
                 { "Name", "TEXT" }
             };
 
@@ -111,7 +108,6 @@ namespace Daw.DB.Tests
 
             var record = new Dictionary<string, object>
             {
-                { "Id", 1 },
                 { "Name", "TestName" }
             };
 
@@ -131,7 +127,6 @@ namespace Daw.DB.Tests
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
             {
-                { "Id", "INTEGER PRIMARY KEY" },
                 { "Name", "TEXT" }
             };
 
@@ -139,7 +134,6 @@ namespace Daw.DB.Tests
 
             var record = new Dictionary<string, object>
             {
-                { "Id", 1 },
                 { "Name", "TestName" }
             };
 
@@ -160,7 +154,6 @@ namespace Daw.DB.Tests
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
             {
-                { "Id", "INTEGER PRIMARY KEY" },
                 { "Name", "TEXT" }
             };
 
@@ -168,7 +161,6 @@ namespace Daw.DB.Tests
 
             var record = new Dictionary<string, object>
             {
-                { "Id", 1 },
                 { "Name", "TestName" }
             };
 
@@ -195,7 +187,6 @@ namespace Daw.DB.Tests
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
             {
-                { "Id", "INTEGER PRIMARY KEY" },
                 { "Name", "TEXT" }
             };
 
@@ -203,7 +194,6 @@ namespace Daw.DB.Tests
 
             var record = new Dictionary<string, object>
             {
-                { "Id", 1 },
                 { "Name", "TestName" }
             };
 

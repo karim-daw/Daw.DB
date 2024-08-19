@@ -1,33 +1,30 @@
 ﻿using Daw.DB.Data.APIs;
-using Daw.DB.Data.Interfaces;
 using Daw.DB.Data.Services;
-using Daw.DB.Data.Services.Daw.DB.Data.Services;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
-namespace Daw.DB.Data
+public static class ServiceConfiguration
 {
-    public static class ServiceConfiguration
+    public static IServiceProvider ConfigureServices()
     {
-        public static ServiceProvider ConfigureServices()
-        {
-            var services = new ServiceCollection();
+        var services = new ServiceCollection();
 
-            // Register services with a placeholder connection factory
-            services.AddSingleton<IDatabaseConnectionFactory, SQLiteConnectionFactory>();
-            services.AddSingleton<ISqlService, SqlService>();
-            services.AddSingleton<IDictionaryHandler, DictionaryHandler>();
-            services.AddSingleton<IJsonHandler, JsonHandler>();
+        // Register singleton services that do not depend on other services
+        services.AddSingleton<IDatabaseConnectionFactory, SQLiteConnectionFactory>(); // Singleton
+        services.AddSingleton<IQueryBuilderService, QueryBuilderService>(); // Singleton (could be Transient)
+        services.AddSingleton<IValidationService, ValidationService>(); // Singleton (could be Transient)
 
-            // using a generic handler for entities to avoid having to register each entity type
-            // this is usefull if the user wants to add new entities without having to modify the API
-            services.AddSingleton(typeof(IEntityHandler<>), typeof(EntityHandler<>));
+        // Register scoped services that depend on other services and should be created once per request
+        services.AddScoped<ISqlService, SqlService>(); // Scoped
+        services.AddScoped<IDictionaryHandler, DictionaryHandler>(); // Scoped
+        services.AddScoped<IJsonHandler, JsonHandler>(); // Scoped
+        services.AddScoped(typeof(IEntityHandler<>), typeof(EntityHandler<>)); // Scoped
 
-            // Register the client APIs
-            services.AddSingleton<IClientApi, ClientApi>();
-            services.AddSingleton<IGhClientApi, GhClientApi>();
+        // Register client APIs that depend on other services and should be created once per request
+        services.AddScoped<IGenericClientApi, GenericClientApi>(); // Scoped
+        services.AddScoped<IGhClientApi, GhClientApi>(); // Scoped
 
-            // Build and return the ServiceProvider
-            return services.BuildServiceProvider();
-        }
+        // Build and return the IServiceProvider
+        return services.BuildServiceProvider();
     }
 }

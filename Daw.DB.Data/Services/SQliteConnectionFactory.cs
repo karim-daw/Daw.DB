@@ -1,11 +1,17 @@
-﻿using Daw.DB.Data.Interfaces;
-using System;
+﻿using System;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
 
 namespace Daw.DB.Data.Services
 {
+
+    public interface IDatabaseConnectionFactory
+    {
+        IDbConnection CreateConnection(string connectionString);
+        IDbConnection CreateConnectionFromFilePath(string dbPath);
+    }
+
     public class SQLiteConnectionFactory : IDatabaseConnectionFactory
     {
 

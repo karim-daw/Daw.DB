@@ -1,124 +1,145 @@
-﻿using Daw.DB.Data.Interfaces;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Daw.DB.Data.Services
 {
+    public interface IDictionaryHandler
+    {
+        void CreateTable(string tableName, Dictionary<string, string> columns, string connectionString);
+        void AddRecord(string tableName, Dictionary<string, object> record, string connectionString);
+        void AddRecordsInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
+        IEnumerable<dynamic> GetAllRecords(string tableName, string connectionString);
+        dynamic GetRecordById(string tableName, object id, string connectionString);
+        void UpdateRecord(string tableName, object id, Dictionary<string, object> updatedValues, string connectionString);
+        void UpdateRecordsInTransaction(string tableName, IEnumerable<KeyValuePair<object, Dictionary<string, object>>> records, string connectionString);
+        void DeleteRecord(string tableName, object id, string connectionString);
+        void DeleteRecordsInTransaction(string tableName, IEnumerable<object> ids, string connectionString);
+    }
+
     public class DictionaryHandler : IDictionaryHandler
     {
+        private readonly IValidationService _validationService;
+        private readonly IQueryBuilderService _queryBuilderService;
         private readonly ISqlService _sqlService;
 
         // Assuming "Id" is the primary key column name
         private const string DefaultIdColumn = "Id";
 
-        public DictionaryHandler(ISqlService sqlService)
+        public DictionaryHandler(
+            IValidationService validationService,
+            IQueryBuilderService queryBuilderService,
+            ISqlService sqlService
+        )
         {
+            _validationService = validationService;
+            _queryBuilderService = queryBuilderService;
             _sqlService = sqlService;
         }
 
         public void CreateTable(string tableName, Dictionary<string, string> columns, string connectionString)
         {
-            // Check if table already exists
-            var tableExistsQuery = $"SELECT name FROM sqlite_master WHERE type='table' AND name='{tableName}';";
-            var tableExists = _sqlService.ExecuteQuery(tableExistsQuery, connectionString).Any();
+            _validationService.ValidateTableName(tableName);
 
+            // Check if the table already exists
+            var checkTableExistsQuery = _queryBuilderService.BuildCheckTableExistsQuery(tableName);
+            var tableExists = _sqlService.ExecuteQuery(checkTableExistsQuery, connectionString).Any();
             if (tableExists)
             {
-                throw new System.Exception($"Table {tableName} already exists.");
+                throw new System.InvalidOperationException("Table already exists.");
             }
 
-            // Ensure the "Id" column is included and set as PRIMARY KEY
-            if (!columns.ContainsKey(DefaultIdColumn))
-            {
-                columns.Add(DefaultIdColumn, "INTEGER PRIMARY KEY AUTOINCREMENT");
-            }
+            _validationService.ValidateColumns(columns);
 
-            var columnsDefinition = string.Join(", ", columns.Select(kv => $"{kv.Key} {kv.Value}"));
-            var createTableQuery = $"CREATE TABLE {tableName} ({columnsDefinition})";
-
-            try
-            {
-                _sqlService.ExecuteCommand(createTableQuery, connectionString);
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception($"Error creating table {tableName}: {ex.Message}");
-            }
+            var createTableQuery = _queryBuilderService.BuildCreateTableQuery(tableName, columns);
+            _sqlService.ExecuteCommand(createTableQuery, connectionString);
         }
 
         public void AddRecord(string tableName, Dictionary<string, object> record, string connectionString)
         {
-            var columns = string.Join(", ", record.Keys);
-            var values = string.Join(", ", record.Keys.Select(k => $"@{k}"));
-            var insertQuery = $"INSERT INTO {tableName} ({columns}) VALUES ({values})";
+            _validationService.ValidateTableName(tableName);
+            _validationService.ValidateRecord(record);
 
-            try
+            var insertQuery = _queryBuilderService.BuildInsertQuery(tableName, record);
+            _sqlService.ExecuteCommand(insertQuery, connectionString, record);
+        }
+
+        public void AddRecordsInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        {
+            var sqlCommands = records.Select(record =>
             {
-                _sqlService.ExecuteCommand(insertQuery, connectionString, record);
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception($"Error adding record to table {tableName}: {ex.Message}");
-            }
+                _validationService.ValidateRecord(record);
+                return _queryBuilderService.BuildInsertQuery(tableName, record);
+            }).ToList();
+
+            _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
         }
 
         public IEnumerable<dynamic> GetAllRecords(string tableName, string connectionString)
         {
-            var selectQuery = $"SELECT * FROM {tableName}";
+            _validationService.ValidateTableName(tableName);
 
-            try
-            {
-                return _sqlService.ExecuteQuery(selectQuery, connectionString);
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception($"Error retrieving records from table {tableName}: {ex.Message}");
-            }
+            var selectQuery = _queryBuilderService.BuildSelectQuery(tableName);
+            return _sqlService.ExecuteQuery(selectQuery, connectionString);
         }
 
         public dynamic GetRecordById(string tableName, object id, string connectionString)
         {
-            var selectQuery = $"SELECT * FROM {tableName} WHERE {DefaultIdColumn} = @Id";
+            _validationService.ValidateTableName(tableName);
+            _validationService.ValidateId(id);
 
-            try
-            {
-                return _sqlService.ExecuteQuery(selectQuery, connectionString, new { Id = id }).FirstOrDefault();
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception($"Error retrieving record from table {tableName}: {ex.Message}");
-            }
+            var whereClause = $"{DefaultIdColumn} = @Id";
+            var selectQuery = _queryBuilderService.BuildSelectQuery(tableName, whereClause);
+            return _sqlService.ExecuteQuery(selectQuery, connectionString, new { Id = id }).FirstOrDefault();
         }
 
         public void UpdateRecord(string tableName, object id, Dictionary<string, object> updatedValues, string connectionString)
         {
-            var setClause = string.Join(", ", updatedValues.Keys.Select(k => $"{k} = @{k}"));
-            var updateQuery = $"UPDATE {tableName} SET {setClause} WHERE {DefaultIdColumn} = @Id";
+            _validationService.ValidateTableName(tableName);
+            _validationService.ValidateRecord(updatedValues);
+            _validationService.ValidateId(id);
 
+            var updateQuery = _queryBuilderService.BuildUpdateQuery(tableName, updatedValues);
             updatedValues[DefaultIdColumn] = id;
+            _sqlService.ExecuteCommand(updateQuery, connectionString, updatedValues);
+        }
 
-            try
+        public void UpdateRecordsInTransaction(string tableName, IEnumerable<KeyValuePair<object, Dictionary<string, object>>> records, string connectionString)
+        {
+            var sqlCommands = records.Select(record =>
             {
-                _sqlService.ExecuteCommand(updateQuery, connectionString, updatedValues);
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception($"Error updating record in table {tableName}: {ex.Message}");
-            }
+                var id = record.Key;
+                var updatedValues = record.Value;
+
+                _validationService.ValidateId(id);
+                _validationService.ValidateRecord(updatedValues);
+
+                var updateQuery = _queryBuilderService.BuildUpdateQuery(tableName, updatedValues);
+                updatedValues[DefaultIdColumn] = id;
+
+                return updateQuery;
+            }).ToList();
+
+            _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
         }
 
         public void DeleteRecord(string tableName, object id, string connectionString)
         {
-            var deleteQuery = $"DELETE FROM {tableName} WHERE {DefaultIdColumn} = @Id";
+            _validationService.ValidateTableName(tableName);
+            _validationService.ValidateId(id);
 
-            try
+            var deleteQuery = _queryBuilderService.BuildDeleteQuery(tableName);
+            _sqlService.ExecuteCommand(deleteQuery, connectionString, new { Id = id });
+        }
+
+        public void DeleteRecordsInTransaction(string tableName, IEnumerable<object> ids, string connectionString)
+        {
+            var sqlCommands = ids.Select(id =>
             {
-                _sqlService.ExecuteCommand(deleteQuery, connectionString, new { Id = id });
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception($"Error deleting record from table {tableName}: {ex.Message}");
-            }
+                _validationService.ValidateId(id);
+                return _queryBuilderService.BuildDeleteQuery(tableName);
+            }).ToList();
+
+            _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
         }
     }
 }

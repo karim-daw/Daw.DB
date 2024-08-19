@@ -1,19 +1,19 @@
-﻿using Daw.DB.Data.Interfaces;
+﻿using Daw.DB.Data.APIs;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Daw.DB.Data
 {
     public static class ApiFactory
     {
-        private static IClientApi _clientApi;
+        private static IGenericClientApi _clientApi;
         private static IGhClientApi _ghClientApi;
 
-        public static IClientApi GetClientApi()
+        public static IGenericClientApi GetGenericClientApi()
         {
             if (_clientApi == null)
             {
                 var serviceProvider = ServiceConfiguration.ConfigureServices();
-                _clientApi = serviceProvider.GetRequiredService<IClientApi>();
+                _clientApi = serviceProvider.GetRequiredService<IGenericClientApi>();
             }
             return _clientApi;
         }

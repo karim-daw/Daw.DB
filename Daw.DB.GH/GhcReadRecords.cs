@@ -1,7 +1,8 @@
-﻿using Daw.DB.Data.Interfaces;
+﻿using Daw.DB.Data.APIs;
 using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
+using System.Collections.Generic;
 
 namespace Daw.DB.GH
 {
@@ -41,25 +42,32 @@ namespace Daw.DB.GH
 
             if (readRecord)
             {
-                string result = ReadRecords(tableName);
-                DA.SetData(0, result);
+                var resultBuilder = new System.Text.StringBuilder();
+                foreach (var record in ReadRecords(tableName))
+                {
+                    resultBuilder.AppendLine(record);
+                }
+                DA.SetData(0, resultBuilder.ToString());
             }
         }
 
-        private string ReadRecords(string tableName)
+
+        /// <summary>
+        /// Read all records from the table with the given name.
+        /// This is a generator method that yields each record as a string.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
+        private IEnumerable<string> ReadRecords(string tableName)
         {
             string connectionString = SQLiteConnectionFactory.ConnectionString;
-            try
+            IEnumerable<dynamic> records = _ghClientApi.GetAllDictionaryRecords(tableName, connectionString);
+            foreach (var record in records)
             {
-                dynamic record = _ghClientApi.GetAllDictionaryRecords(tableName, connectionString);
-                string dynamicObject = Convert.ToString(record);
-                return dynamicObject;
-            }
-            catch (Exception ex)
-            {
-                return ex.Message;
+                yield return Convert.ToString(record);
             }
         }
+
 
         protected override System.Drawing.Bitmap Icon => null;
 
