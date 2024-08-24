@@ -140,6 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApiFactory.cs" />
+    <Compile Include="APIs\EventfulGhClientApi.cs" />
     <Compile Include="APIs\GenericClientApi.cs" />
     <Compile Include="APIs\GhClientApi.cs" />
     <Compile Include="Interfaces\IEntity.cs" />
