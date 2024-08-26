@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using System.Collections.Generic;
 
 namespace Daw.DB.Data.Services
@@ -9,7 +9,7 @@ namespace Daw.DB.Data.Services
         IEnumerable<dynamic> ExecuteQuery(string sql, string connectionString, object parameters = null);
         IEnumerable<T> ExecuteQuery<T>(string sql, string connectionString, object parameters = null);
         void ExecuteCommand(string sql, string connectionString, object parameters = null);
-        void ExecuteInTransaction(IEnumerable<string> sqlCommands, string connectionString, object parameters = null);
+        void ExecuteInTransaction(IEnumerable<(string sql, object parameters)> sqlCommands, string connectionString);
     }
 
 
@@ -49,7 +49,7 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public void ExecuteInTransaction(IEnumerable<string> sqlCommands, string connectionString, object parameters = null)
+        public void ExecuteInTransaction(IEnumerable<(string sql, object parameters)> sqlCommands, string connectionString)
         {
             using (var db = _connectionFactory.CreateConnection(connectionString))
             {
@@ -58,7 +58,7 @@ namespace Daw.DB.Data.Services
                 {
                     try
                     {
-                        foreach (var sql in sqlCommands)
+                        foreach (var (sql, parameters) in sqlCommands)
                         {
                             db.Execute(sql, parameters, transaction);
                         }
