@@ -7,6 +7,17 @@ namespace Daw.DB.Data
     {
         private static IGenericClientApi _clientApi;
         private static IGhClientApi _ghClientApi;
+        private static IEventfulGhClientApi _eventDrivenGhClientApi;
+
+        public static IEventfulGhClientApi GetEventDrivenGhClientApi()
+        {
+            if (_eventDrivenGhClientApi == null)
+            {
+                var serviceProvider = ServiceConfiguration.ConfigureServices();
+                _eventDrivenGhClientApi = serviceProvider.GetRequiredService<IEventfulGhClientApi>();
+            }
+            return _eventDrivenGhClientApi;
+        }
 
         public static IGenericClientApi GetGenericClientApi()
         {

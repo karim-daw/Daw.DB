@@ -91,7 +91,24 @@ namespace Daw.DB.Data.APIs
             }
             catch (System.Exception ex)
             {
-                return $"Error: {ex.Message}";
+                return $"Error adding record to table '{tableName}': {ex.Message}";
+            }
+        }
+
+        public string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        {
+            try
+            {
+                // add the record to the table
+                _dictionaryHandler.AddRecordsInTransaction(tableName, records, connectionString);
+
+                // return the record added message wth the record details as a string
+                var stringRecord = records.ToString();
+                return $"Record added to table '{tableName}' successfully. Record: {stringRecord}";
+            }
+            catch (System.Exception ex)
+            {
+                return $"Error adding record to table '{tableName}': {ex.Message}";
             }
         }
 

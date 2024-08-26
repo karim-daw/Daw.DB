@@ -1,4 +1,4 @@
-﻿using Daw.DB.Data.APIs;
+using Daw.DB.Data.APIs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -264,7 +264,7 @@ namespace Daw.DB.Tests
             });
 
             // Act
-            _eventfulGhClientApi.AddDictionaryRecordInTransaction(tableName, _connectionString, records);
+            _eventfulGhClientApi.AddDictionaryRecordInTransaction(tableName, records, _connectionString);
 
             // Assert
             Assert.IsTrue(_eventRaised, "The AddRecordsInTransaction event was not raised as expected.");
