@@ -1,4 +1,4 @@
-using Daw.DB.Data.APIs;
+﻿using Daw.DB.Data.APIs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -222,10 +222,10 @@ namespace Daw.DB.Tests
                 { "Name", "TestName" }
             };
 
-            EventHandler<TableChangedEventArgs> handler = (sender, args) =>
+            void handler(object sender, TableChangedEventArgs args)
             {
                 _eventRaised = true;
-            };
+            }
 
             _eventfulGhClientApi.SubscribeToTableChanges(handler);
 
