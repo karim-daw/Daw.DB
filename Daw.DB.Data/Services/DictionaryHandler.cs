@@ -65,14 +65,20 @@ namespace Daw.DB.Data.Services
 
         public void AddRecordsInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
         {
-            var sqlCommands = records.Select(record =>
+            var sqlCommands = new List<(string sql, object parameters)>();
+
+            // Create a list of SQL commands to execute
+            foreach (var record in records)
             {
                 _validationService.ValidateRecord(record);
-                return _queryBuilderService.BuildInsertQuery(tableName, record);
-            }).ToList();
+                var insertQuery = _queryBuilderService.BuildInsertQuery(tableName, record);
+                sqlCommands.Add((insertQuery, record));
+            }
 
+            // Execute all commands within a transaction
             _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
         }
+
 
         public IEnumerable<dynamic> GetAllRecords(string tableName, string connectionString)
         {
@@ -105,7 +111,10 @@ namespace Daw.DB.Data.Services
 
         public void UpdateRecordsInTransaction(string tableName, IEnumerable<KeyValuePair<object, Dictionary<string, object>>> records, string connectionString)
         {
-            var sqlCommands = records.Select(record =>
+            IEnumerable<(string sql, object parameters)> sqlCommands = null;
+
+            // create a list of sql commands to execute
+            foreach (var record in records)
             {
                 var id = record.Key;
                 var updatedValues = record.Value;
@@ -116,8 +125,8 @@ namespace Daw.DB.Data.Services
                 var updateQuery = _queryBuilderService.BuildUpdateQuery(tableName, updatedValues);
                 updatedValues[DefaultIdColumn] = id;
 
-                return updateQuery;
-            }).ToList();
+                sqlCommands.Append((updateQuery, updatedValues));
+            }
 
             _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
         }
@@ -133,11 +142,19 @@ namespace Daw.DB.Data.Services
 
         public void DeleteRecordsInTransaction(string tableName, IEnumerable<object> ids, string connectionString)
         {
-            var sqlCommands = ids.Select(id =>
+
+
+            IEnumerable<(string sql, object parameters)> sqlCommands = null;
+
+            // create a list of sql commands to execute
+            foreach (var id in ids)
             {
                 _validationService.ValidateId(id);
-                return _queryBuilderService.BuildDeleteQuery(tableName);
-            }).ToList();
+
+                var deleteQuery = _queryBuilderService.BuildDeleteQuery(tableName);
+                sqlCommands.Append((deleteQuery, new { Id = id }));
+            }
+
 
             _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
         }

@@ -1,4 +1,4 @@
-using Daw.DB.Data.APIs;
+﻿using Daw.DB.Data.APIs;
 using Daw.DB.Data.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -13,7 +13,7 @@ public static class ServiceConfiguration
         services.AddSingleton<IDatabaseConnectionFactory, SQLiteConnectionFactory>(); // Singleton
         services.AddSingleton<IQueryBuilderService, QueryBuilderService>(); // Singleton (could be Transient)
         services.AddSingleton<IValidationService, ValidationService>(); // Singleton (could be Transient)
-        services.AddSingleton<ITableChangeNotifier, TableChangeNotifier>(); // Singleton
+        services.AddSingleton<ITableChangePublisher, TableChangePublisher>(); // Singleton
 
         // Register scoped services that depend on other services and should be created once per request
         services.AddScoped<ISqlService, SqlService>(); // Scoped
@@ -29,8 +29,8 @@ public static class ServiceConfiguration
         services.AddScoped<IEventfulGhClientApi>(provider =>
         {
             var ghClientApi = provider.GetRequiredService<IGhClientApi>();
-            var tableChangeNotifier = provider.GetRequiredService<ITableChangeNotifier>();
-            return new EventfulGhClientApi(ghClientApi, tableChangeNotifier);
+            var tableChangePublisher = provider.GetRequiredService<ITableChangePublisher>();
+            return new EventfulGhClientApi(ghClientApi, tableChangePublisher);
         }); // Scoped
 
         // Build and return the IServiceProvider
