@@ -13,6 +13,7 @@ namespace Daw.DB.Data.APIs
         dynamic GetDictionaryRecordById(string tableName, object id, string connectionString);
         void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record, string connectionString);
         void DeleteRecord(string tableName, object id, string connectionString);
+        string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> record, string connectionString);
     }
     public class GhClientApi : IGhClientApi
     {
@@ -68,7 +69,6 @@ namespace Daw.DB.Data.APIs
             catch (System.Exception ex)
             {
                 throw new System.Exception($"Error creating table '{tableName}': {ex.Message}");
-                //return $"Error: {ex.Message}";
             }
         }
 
@@ -139,8 +139,16 @@ namespace Daw.DB.Data.APIs
         /// <returns></returns>
         public dynamic GetDictionaryRecordById(string tableName, object id, string connectionString)
         {
-            // TODO: add error handling
-            return _dictionaryHandler.GetRecordById(tableName, id, connectionString);
+            try
+            {
+                var record = _dictionaryHandler.GetRecordById(tableName, id, connectionString);
+                return record;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error retrieving record from table {tableName}: {ex.Message}");
+            }
+
         }
 
         /// <summary>
@@ -151,7 +159,14 @@ namespace Daw.DB.Data.APIs
         /// <param name="record"></param>
         public void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record, string connectionString)
         {
-            _dictionaryHandler.UpdateRecord(tableName, id, record, connectionString);
+            try
+            {
+                _dictionaryHandler.UpdateRecord(tableName, id, record, connectionString);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error updating record in table {tableName}: {ex.Message}");
+            }
         }
 
 
@@ -162,7 +177,14 @@ namespace Daw.DB.Data.APIs
         /// <param name="id"></param>
         public void DeleteRecord(string tableName, object id, string connectionString)
         {
-            _dictionaryHandler.DeleteRecord(tableName, id, connectionString);
+            try
+            {
+                _dictionaryHandler.DeleteRecord(tableName, id, connectionString);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error deleting record from table {tableName}: {ex.Message}");
+            }
         }
 
     }
