@@ -6,6 +6,11 @@ namespace Daw.DB.GH
 {
     public class Daw_DB_GhcInfo : GH_AssemblyInfo
     {
+
+        // chat gpt lik
+        // https://chatgpt.com/c/8f546f32-1335-4084-bc84-d39871e8e57f
+
+
         public override string Name => "Daw.DB.GH";
 
         //Return a 24x24 pixel bitmap to represent this GHA library.
