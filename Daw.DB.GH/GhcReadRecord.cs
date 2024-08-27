@@ -39,9 +39,9 @@ namespace Daw.DB.GH
             string tableName = null;
             int recordId = 0;
 
-            if (!DA.GetData(1, ref tableName)) return;
-            if (!DA.GetData(2, ref readRecord)) return;
-            if (!DA.GetData(3, ref recordId)) return;
+            if (!DA.GetData(0, ref tableName)) return;
+            if (!DA.GetData(1, ref readRecord)) return;
+            if (!DA.GetData(2, ref recordId)) return;
 
             if (readRecord)
             {
@@ -53,6 +53,10 @@ namespace Daw.DB.GH
         private string ReadRecord(string tableName, int? recordId)
         {
             string connectionString = SQLiteConnectionFactory.ConnectionString;
+
+            // print in console
+            Console.WriteLine($"Reading record from table {tableName} with id {recordId}");
+
             try
             {
                 dynamic record = _ghClientApi.GetDictionaryRecordById(tableName, recordId, connectionString);
