@@ -163,6 +163,14 @@ namespace Daw.DB.Data.APIs
         }
 
 
+        public string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        {
+            var result = _ghClientApi.AddDictionaryRecordBatch(tableName, records, connectionString);
+            _tableChangePublisher.PublishTableChanged(tableName, "AddRecordsBatch");
+            return result;
+        }
+
+
 
         /// <summary>
         /// Wrapper method for the GetAllDictionaryRecords method of the IGhClientApi interface.
@@ -235,6 +243,8 @@ namespace Daw.DB.Data.APIs
         {
             _tableChangePublisher.TableChanged -= handler;
         }
+
+
     }
 
 }
