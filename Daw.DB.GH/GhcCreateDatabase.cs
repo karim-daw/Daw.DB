@@ -61,6 +61,11 @@ namespace Daw.DB.GH
         // Wrapper method
         private string CreateAndInitializeDatabase(string databasePath)
         {
+
+            string connectionString = $"Data Source={databasePath};Version=3;";
+            SQLiteConnectionFactory.ConnectionString = connectionString;
+
+
             try
             {
                 // Check if the database file already exists
@@ -69,13 +74,11 @@ namespace Daw.DB.GH
                     return $"Database already exists at {databasePath}, delete it if you want to overwrite the data";
                 }
 
-                // Initialize the database using the connection string
-                string connectionString = $"Data Source={databasePath};Version=3;";
 
                 _ghClientApi.CreateConnection(connectionString);
 
                 // save out the connection string for later use
-                SQLiteConnectionFactory.ConnectionString = connectionString;
+                // TODO: check why this isn't working
 
                 return $"Database created and initialized at {databasePath}";
             }
