@@ -14,6 +14,8 @@ namespace Daw.DB.Data.Services
         void UpdateRecordsInTransaction(string tableName, IEnumerable<KeyValuePair<object, Dictionary<string, object>>> records, string connectionString);
         void DeleteRecord(string tableName, object id, string connectionString);
         void DeleteRecordsInTransaction(string tableName, IEnumerable<object> ids, string connectionString);
+        void AddRecordsBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
+        void AddRecordsBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
     }
 
     public class DictionaryHandler : IDictionaryHandler
@@ -79,7 +81,67 @@ namespace Daw.DB.Data.Services
             _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
         }
 
+        /// <summary>
+        /// Add records in batch.
+        /// Use this for the fastest way to insert a large number of records.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="records"></param>
+        /// <param name="connectionString"></param>
+        public void AddRecordsBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        {
+            // Validate the table name
+            _validationService.ValidateTableName(tableName);
 
+            // Validate each record in the collection
+            foreach (var record in records)
+            {
+                _validationService.ValidateRecord(record);
+            }
+
+            // Generate the batch insert query and corresponding parameters
+            var (batchInsertQuery, parameters) = _queryBuilderService.BuildBatchInsertQuery(tableName, records);
+
+            // Execute the batch insert command with the generated query and parameters
+            _sqlService.ExecuteCommand(batchInsertQuery, connectionString, parameters);
+        }
+
+
+
+        /// <summary>
+        /// Add records in batch within a transaction.
+        /// Use this for the fastest way to insert a large number of records while ensuring atomicity.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="records"></param>
+        /// <param name="connectionString"></param>
+        public void AddRecordsBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        {
+            // Validate the table name
+            _validationService.ValidateTableName(tableName);
+
+            // Validate each record in the collection
+            foreach (var record in records)
+            {
+                _validationService.ValidateRecord(record);
+            }
+
+            // Generate the batch insert query and corresponding parameters
+            var (batchInsertQuery, parameters) = _queryBuilderService.BuildBatchInsertQuery(tableName, records);
+
+            // Wrap the batch insert in a transaction and pass the parameters
+            _sqlService.ExecuteInTransaction(new List<(string sql, object parameters)> { (batchInsertQuery, parameters) }, connectionString);
+        }
+
+
+
+
+        /// <summary>
+        /// Get all records from the table with the given name.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="connectionString"></param>
+        /// <returns></returns>
         public IEnumerable<dynamic> GetAllRecords(string tableName, string connectionString)
         {
             _validationService.ValidateTableName(tableName);
@@ -88,6 +150,15 @@ namespace Daw.DB.Data.Services
             return _sqlService.ExecuteQuery(selectQuery, connectionString);
         }
 
+
+
+        /// <summary>
+        /// Get a record by its Id.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="id"></param>
+        /// <param name="connectionString"></param>
+        /// <returns></returns>
         public dynamic GetRecordById(string tableName, object id, string connectionString)
         {
             _validationService.ValidateTableName(tableName);
@@ -98,6 +169,15 @@ namespace Daw.DB.Data.Services
             return _sqlService.ExecuteQuery(selectQuery, connectionString, new { Id = id }).FirstOrDefault();
         }
 
+
+
+        /// <summary>
+        /// Update a record in the table with the given name.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="id"></param>
+        /// <param name="updatedValues"></param>
+        /// <param name="connectionString"></param>
         public void UpdateRecord(string tableName, object id, Dictionary<string, object> updatedValues, string connectionString)
         {
             _validationService.ValidateTableName(tableName);
@@ -109,6 +189,14 @@ namespace Daw.DB.Data.Services
             _sqlService.ExecuteCommand(updateQuery, connectionString, updatedValues);
         }
 
+
+        // TODO: still need to test this method
+        /// <summary>
+        /// Update records in batch within a transaction.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="records"></param>
+        /// <param name="connectionString"></param>
         public void UpdateRecordsInTransaction(string tableName, IEnumerable<KeyValuePair<object, Dictionary<string, object>>> records, string connectionString)
         {
             IEnumerable<(string sql, object parameters)> sqlCommands = null;
