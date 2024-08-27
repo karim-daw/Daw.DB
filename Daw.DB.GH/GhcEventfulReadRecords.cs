@@ -32,6 +32,7 @@ namespace Daw.DB.GH
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("Result", "R", "Result of the database operation", GH_ParamAccess.item);
+            pManager.AddTextParameter("Records", "R", "Records from the table", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -49,6 +50,9 @@ namespace Daw.DB.GH
                 SubscribeToTableChanges(tableName);
             }
 
+            // output all records from the table
+            List<string> records = new List<string>();
+
             if (readRecord || _eventTriggered)
             {
                 _eventTriggered = false; // Reset event flag
@@ -56,9 +60,12 @@ namespace Daw.DB.GH
                 foreach (var record in ReadRecords(tableName))
                 {
                     resultBuilder.AppendLine(record);
+                    records.Add(record);
                 }
                 DA.SetData(0, resultBuilder.ToString());
             }
+
+            DA.SetDataList(1, records);
         }
 
         /// <summary>
