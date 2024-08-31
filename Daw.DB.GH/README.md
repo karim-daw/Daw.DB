@@ -8,11 +8,11 @@ This repository contains a comprehensive suite of Grasshopper components designe
 ## Components
 
 ### 1. Database Management Components
-- **GhcCreateDatabase**: Creates a new SQLite database file.
-- **GhcConnectionString**: Generates and manages connection strings.
-- **GhcCreateTable**: Creates tables with specified columns and data types.
-- **GhcDropTable**: Drops (deletes) an existing table.
-- **GhcListTables**: Lists all tables in the database.
+- [x] **GhcCreateDatabase**: Creates a new SQLite database file.
+- [x] **GhcConnectionString**: Generates and manages connection strings.
+- [x] **GhcCreateTable**: Creates tables with specified columns and data types.
+- [] **GhcDropTable**: Drops (deletes) an existing table.
+- [] **GhcListTables**: Lists all tables in the database.
 
 
 ### 2. Record Management Components
