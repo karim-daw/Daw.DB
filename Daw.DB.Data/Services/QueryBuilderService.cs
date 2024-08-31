@@ -82,6 +82,8 @@ namespace Daw.DB.Data.Services
                     // Add the actual values to the parameters dictionary
                     foreach (var kvp in x.record)
                     {
+                        // this will create a unique key for each parameter
+                        // e.g. for the first record, the key will be "Name0", "Height0", "Floors0", "Location0"
                         parameters.Add($"{kvp.Key}{x.index}", kvp.Value);
                     }
 

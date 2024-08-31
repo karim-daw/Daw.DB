@@ -25,6 +25,11 @@ namespace Daw.DB.Data.Services
             }
         }
 
+        /// <summary>
+        /// Validates the column names and types.
+        /// </summary>
+        /// <param name="columns"></param>
+        /// <exception cref="ArgumentException"></exception>
         public void ValidateColumns(Dictionary<string, string> columns)
         {
             foreach (var column in columns)

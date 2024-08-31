@@ -81,6 +81,7 @@ namespace Daw.DB.Data.Services
             _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
         }
 
+        // TODO: still need to test this method
         /// <summary>
         /// Add records in batch.
         /// Use this for the fastest way to insert a large number of records.
@@ -107,7 +108,7 @@ namespace Daw.DB.Data.Services
         }
 
 
-
+        // TODO: still need to test this method
         /// <summary>
         /// Add records in batch within a transaction.
         /// Use this for the fastest way to insert a large number of records while ensuring atomicity.
@@ -129,8 +130,12 @@ namespace Daw.DB.Data.Services
             // Generate the batch insert query and corresponding parameters
             var (batchInsertQuery, parameters) = _queryBuilderService.BuildBatchInsertQuery(tableName, records);
 
+            // wrap that batch insert query and parameters in an IEnumeration type
+            List<(string, object)> batchInsertQueries = new List<(string, object)> { (batchInsertQuery, parameters) };
+
+
             // Wrap the batch insert in a transaction and pass the parameters
-            _sqlService.ExecuteInTransaction(new List<(string sql, object parameters)> { (batchInsertQuery, parameters) }, connectionString);
+            _sqlService.ExecuteInTransaction(batchInsertQueries, connectionString);
         }
 
 
