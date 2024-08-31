@@ -15,6 +15,7 @@ namespace Daw.DB.Data.APIs
         void DeleteRecord(string tableName, object id, string connectionString);
         string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> record, string connectionString);
         string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
+        string AddDictionaryRecordBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
     }
     public class GhClientApi : IGhClientApi
     {
