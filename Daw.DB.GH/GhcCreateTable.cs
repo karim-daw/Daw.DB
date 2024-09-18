@@ -58,11 +58,6 @@ namespace Daw.DB.GH
         // Wrapper method
         private string CreateTable(string tableName, List<string> columnNames, List<string> columnTypes)
         {
-            var columns = new Dictionary<string, string>();
-            for (int i = 0; i < columnNames.Count; i++)
-            {
-                columns.Add(columnNames[i], columnTypes[i]);
-            }
 
             string connectionString = SQLiteConnectionFactory.ConnectionString;
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -71,6 +66,13 @@ namespace Daw.DB.GH
                     "You have to create a database first. Lay down a ConnectionString " +
                     "component on the canvas, if a connection string is outputted";
             }
+
+            var columns = new Dictionary<string, string>();
+            for (int i = 0; i < columnNames.Count; i++)
+            {
+                columns.Add(columnNames[i], columnTypes[i]);
+            }
+
 
             try
             {
