@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34316.72
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Daw.DB.UI", "Daw.DB.UI.csproj", "{F553EFC8-7268-4DD3-9A96-CD5B71326344}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Daw.DB.Data", "..\Daw.DB.Data\Daw.DB.Data.csproj", "{F1ABB2E4-7292-4401-951D-B84D187AE35D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F553EFC8-7268-4DD3-9A96-CD5B71326344}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F553EFC8-7268-4DD3-9A96-CD5B71326344}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F553EFC8-7268-4DD3-9A96-CD5B71326344}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F553EFC8-7268-4DD3-9A96-CD5B71326344}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1ABB2E4-7292-4401-951D-B84D187AE35D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1ABB2E4-7292-4401-951D-B84D187AE35D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1ABB2E4-7292-4401-951D-B84D187AE35D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1ABB2E4-7292-4401-951D-B84D187AE35D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3E07F862-C527-471D-A0CD-4E6C4EF09D8D}
+	EndGlobalSection
+EndGlobal
