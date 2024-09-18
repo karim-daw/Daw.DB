@@ -17,6 +17,8 @@ namespace Daw.DB.GH
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
+            // set toggle to false to prevent the component from running
+            pManager.AddBooleanParameter("ShowConnectionString", "SCS", "Boolean to trigger the display of the connection string", GH_ParamAccess.item, false);
         }
 
 
@@ -27,6 +29,15 @@ namespace Daw.DB.GH
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            bool showConnectionString = false;
+            if (!DA.GetData(0, ref showConnectionString)) return;
+
+            // if toggle is false, return an empty string
+            if (!showConnectionString)
+            {
+                DA.SetData(0, "");
+                return;
+            }
 
             // if the connection string is not set, return an empty string
             if (string.IsNullOrWhiteSpace(SQLiteConnectionFactory.ConnectionString))

@@ -8,19 +8,33 @@ This repository contains a comprehensive suite of Grasshopper components designe
 ## Components
 
 ### 1. Database Management Components
-- **GhcCreateDatabase**: Creates a new SQLite database file.
-- **GhcConnectionString**: Generates and manages connection strings.
-- **GhcCreateTable**: Creates tables with specified columns and data types.
-- **GhcDropTable**: Drops (deletes) an existing table.
-- **GhcListTables**: Lists all tables in the database.
+- [x] **GhcCreateDatabase**: Creates a new SQLite database file.
+- [x] **GhcConnectionString**: Generates and manages connection strings.
+- [x] **GhcCreateTable**: Creates tables with specified columns and data types.
+- [ ] **GhcDropTable**: Drops (deletes) an existing table.
+- [ ] **GhcListTables**: Lists all tables in the database.
 
 
 ### 2. Record Management Components
-- **GhcCreateRecord**: Inserts new records into a table.
-- **GhcReadRecords**: Reads all records from a specified table.
-- **GhcUpdateRecord**: Updates existing records in a table based on a primary key or condition.
-- **GhcDeleteRecord**: Deletes records from a table based on a primary key or condition.
+- [x] **GhcCreateRecord**: Inserts new records into a table.
+- [x] **GhcReadRecords**: Reads all records from a specified table.
+- [ ] **GhcDeleteRecord**: Deletes records from a table based on a primary key or condition.
+- [ ] **GhcUpdateRecord**: Updates existing records in a table based on a primary key or condition.
+- [ ] **GhcFilterRecords**: Filters records based on specified conditions.
+- [ ] **GhcSortRecords**: Sorts records based on specified columns and order.
+- [ ] **GhcOneToOneJoin**: Joins records from two tables based on a common key.
+- [ ] **GhcOneToManyJoin**: Joins records from two tables based on a common key, allowing multiple matches.
+- [ ] **GhcManyToManyJoin**: Joins records from two tables based on a common key, allowing multiple matches on both sides.
+- [ ] **GhcAggregateRecords**: Performs aggregation functions on records, such as `SUM`, `AVG`, `COUNT`, etc.
+- [ ] **GhcGroupRecords**: Groups records based on specified columns.
+- [ ] **GhcPivotRecords**: Pivots records based on specified columns. This means converting rows into columns.
+- [ ] **GhcUnpivotRecords**: Unpivots records based on specified columns. This means converting columns into rows.
+- [ ] **GhcSelectColumns**: Selects specific columns from a table.
+- [ ] **GhcSelectDistinct**: Selects distinct records from a table.
+- [ ] **GhcLimitRecords**: Limits the number of records returned.
 
+
+- 
 ### 3. Event-Driven Components
 - **GhcEventfulReadRecords**: Reads records from a table and updates automatically when the table changes.
 - **GhcEventfulUpdateRecord**: Listens for changes in a table and automatically updates specific records.

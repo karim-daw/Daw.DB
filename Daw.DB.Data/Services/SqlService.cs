@@ -3,15 +3,16 @@ using System.Collections.Generic;
 
 namespace Daw.DB.Data.Services
 {
-
     public interface ISqlService
     {
         IEnumerable<dynamic> ExecuteQuery(string sql, string connectionString, object parameters = null);
         IEnumerable<T> ExecuteQuery<T>(string sql, string connectionString, object parameters = null);
         void ExecuteCommand(string sql, string connectionString, object parameters = null);
         void ExecuteInTransaction(IEnumerable<(string sql, object parameters)> sqlCommands, string connectionString);
-    }
 
+        // New method to retrieve column metadata
+        Dictionary<string, string> GetColumnMetadata(string tableName, string connectionString);
+    }
 
     public class SqlService : ISqlService
     {
@@ -58,9 +59,9 @@ namespace Daw.DB.Data.Services
                 {
                     try
                     {
-                        foreach (var (sql, parameters) in sqlCommands)
+                        foreach (var command in sqlCommands)
                         {
-                            db.Execute(sql, parameters, transaction);
+                            db.Execute(command.sql, command.parameters, transaction);
                         }
                         transaction.Commit();
                     }
@@ -73,5 +74,19 @@ namespace Daw.DB.Data.Services
             }
         }
 
+        // New method to retrieve column metadata
+        public Dictionary<string, string> GetColumnMetadata(string tableName, string connectionString)
+        {
+            string query = $"PRAGMA table_info({tableName});";
+            var columnMetadata = new Dictionary<string, string>();
+
+            var result = ExecuteQuery(query, connectionString);
+            foreach (var row in result)
+            {
+                columnMetadata.Add(row.name, row.type); // Assuming 'name' and 'type' are fields in the PRAGMA result
+            }
+
+            return columnMetadata;
+        }
     }
 }

@@ -1,0 +1,26 @@
+﻿<Window x:Class="Daw.DB.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Daw.DB.UI"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- Left column for buttons, takes 1/4 of the window width -->
+            <ColumnDefinition Width="1*" />
+            <!-- Right column for data grid, takes 3/4 of the window width -->
+            <ColumnDefinition Width="3*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Left panel for buttons -->
+        <StackPanel Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Button Name="ShowDataButton" Width="120" Height="40" Content="Show Data" Click="ShowDataButton_Click"/>
+        </StackPanel>
+
+        <!-- Right panel for data display -->
+        <DataGrid Name="DataGridView" Grid.Column="1" Visibility="Collapsed" AutoGenerateColumns="True" />
+    </Grid>
+</Window>

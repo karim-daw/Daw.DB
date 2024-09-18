@@ -2,6 +2,7 @@ using Daw.DB.Data;
 using Daw.DB.Data.APIs;
 using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -10,6 +11,7 @@ namespace Daw.DB.GH
     public class GhcCreateRecord : GH_Component
     {
         private readonly IGhClientApi _ghClientApi;
+        private readonly IEventfulGhClientApi _eventfulGhClientApi;
 
         public GhcCreateRecord()
           : base("CreateRecord", "CR",
@@ -18,14 +20,14 @@ namespace Daw.DB.GH
         {
             // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
             _ghClientApi = ApiFactory.GetGhClientApi();
+            _eventfulGhClientApi = ApiFactory.GetEventDrivenGhClientApi();
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("TableName", "TN", "Name of the table to insert the record into", GH_ParamAccess.item);
             pManager.AddBooleanParameter("AddRecord", "AR", "Boolean to trigger record addition", GH_ParamAccess.item);
-            pManager.AddTextParameter("RecordKeys", "RK", "Record KEYS to add to the table", GH_ParamAccess.list);
-            pManager.AddTextParameter("RecordValues", "RV", "Record VALUES to add to the table", GH_ParamAccess.list);
+            pManager.AddTextParameter("JsonRecord", "JR", "JSON representation of record key-value pairs or list of records", GH_ParamAccess.list);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -37,49 +39,60 @@ namespace Daw.DB.GH
         {
             bool addRecord = false;
             string tableName = null;
-            List<string> recordKeys = new List<string>();
-            List<string> recordValues = new List<string>();
+            List<string> jsonRecords = new List<string>();
 
             // Retrieve input data
-            if (!DA.GetData(1, ref tableName)) return;
-            if (!DA.GetData(2, ref addRecord)) return;
-            if (!DA.GetDataList(3, recordKeys)) return;
-            if (!DA.GetDataList(4, recordValues)) return;
+            if (!DA.GetData(0, ref tableName)) return;
+            if (!DA.GetData(1, ref addRecord)) return;
+            if (!DA.GetDataList(2, jsonRecords)) return;
 
-            // Add a record to the table
+            // Add records to the table
             if (addRecord)
             {
-                string result = CreateRecord(tableName, recordKeys, recordValues);
+                string result = CreateRecords(tableName, jsonRecords);
                 DA.SetData(0, result);
             }
         }
 
-        // Wrapper method
-        private string CreateRecord(string tableName, List<string> recordKeys, List<string> recordValues)
+        // Wrapper method to handle record creation
+        private string CreateRecords(string tableName, List<string> jsonRecords)
         {
-            var record = new Dictionary<string, object>();
-            for (int i = 0; i < recordKeys.Count; i++)
-            {
-                record.Add(recordKeys[i], recordValues[i]);
-            }
+            var records = new List<Dictionary<string, object>>();
 
-
-            string connectionString = SQLiteConnectionFactory.ConnectionString;
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                return "Connection string has not been set yet. " +
-                    "You have to create a database first. Lay down a ConnectionString " +
-                    "component on the canvas, if a connection string is outputted";
-            }
             try
             {
-                _ghClientApi.AddDictionaryRecord(tableName, record, connectionString);
-                return "Record added successfully.";
+                foreach (var json in jsonRecords)
+                {
+                    // Deserialize JSON string to dictionary
+                    var record = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                    records.Add(record);
+                }
+
+                string connectionString = SQLiteConnectionFactory.ConnectionString;
+
+                if (string.IsNullOrWhiteSpace(connectionString))
+                {
+                    return "Connection string has not been set yet. " +
+                           "You have to create a database first. Lay down a ConnectionString " +
+                           "component on the canvas, if a connection string is outputted";
+                }
+
+                // If there are multiple records, use a batch insert
+                if (records.Count > 1)
+                {
+                    _eventfulGhClientApi.AddDictionaryRecordBatch(tableName, records, connectionString);
+                }
+                else
+                {
+                    // Single record insert
+                    _eventfulGhClientApi.AddDictionaryRecord(tableName, records[0], connectionString);
+                }
+
+                return "Record(s) added successfully.";
             }
             catch (Exception ex)
             {
-                return $"Error adding record: {ex.Message}";
+                return $"Error adding record(s): {ex.Message}";
             }
         }
 

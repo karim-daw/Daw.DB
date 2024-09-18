@@ -1,4 +1,5 @@
-﻿using Daw.DB.Data.APIs;
+﻿using Daw.DB.Data;
+using Daw.DB.Data.APIs;
 using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
@@ -17,6 +18,8 @@ namespace Daw.DB.GH
               "Read all records from the database given a table name",
             "Daw.DB", "READ")
         {
+            // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
+            _ghClientApi = ApiFactory.GetGhClientApi();
         }
 
 
@@ -29,6 +32,7 @@ namespace Daw.DB.GH
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("Result", "R", "Result of the database operation", GH_ParamAccess.item);
+            pManager.AddTextParameter("Records", "R", "Records from the table", GH_ParamAccess.list);
         }
 
 
@@ -40,15 +44,21 @@ namespace Daw.DB.GH
             if (!DA.GetData(0, ref tableName)) return;
             if (!DA.GetData(1, ref readRecord)) return;
 
+            // output all records from the table
+            List<string> records = new List<string>();
+
             if (readRecord)
             {
                 var resultBuilder = new System.Text.StringBuilder();
                 foreach (var record in ReadRecords(tableName))
                 {
                     resultBuilder.AppendLine(record);
+                    records.Add(record);
                 }
                 DA.SetData(0, resultBuilder.ToString());
             }
+
+            DA.SetDataList(1, records);
         }
 
 

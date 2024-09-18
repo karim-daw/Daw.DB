@@ -10,7 +10,7 @@ namespace Daw.DB.Data.Services
         void ValidateColumns(Dictionary<string, string> columns);
         void ValidateRecord(Dictionary<string, object> record);
         void ValidateId(object id);
-
+        void ValidateRecordAgainstColumns(Dictionary<string, object> record, Dictionary<string, string> columnMetadata); // New method for validating record against columns and their types
     }
 
     public class ValidationService : IValidationService
@@ -25,6 +25,11 @@ namespace Daw.DB.Data.Services
             }
         }
 
+        /// <summary>
+        /// Validates the column names and types.
+        /// </summary>
+        /// <param name="columns"></param>
+        /// <exception cref="ArgumentException"></exception>
         public void ValidateColumns(Dictionary<string, string> columns)
         {
             foreach (var column in columns)
@@ -56,6 +61,49 @@ namespace Daw.DB.Data.Services
             if (id == null)
             {
                 throw new ArgumentException("Id cannot be null.");
+            }
+        }
+
+        public void ValidateRecordAgainstColumns(Dictionary<string, object> record, Dictionary<string, string> columnMetadata)
+        {
+            foreach (var key in record.Keys)
+            {
+                if (!columnMetadata.ContainsKey(key))
+                {
+                    throw new ArgumentException($"Invalid column name {key} in record.");
+                }
+
+                var expectedType = columnMetadata[key];
+                var value = record[key];
+
+                if (!ValidateType(expectedType, value))
+                {
+                    throw new ArgumentException($"Invalid data type for column {key}: Expected {expectedType} but got {value?.GetType().Name}");
+                }
+            }
+        }
+
+        private bool ValidateType(string expectedType, object value)
+        {
+            if (value == null)
+            {
+                return true; // Assuming NULL is allowed in the column
+            }
+
+            switch (expectedType.ToUpperInvariant())
+            {
+                case "INTEGER":
+                    return value is int || value is long;
+                case "REAL":
+                    return value is float || value is double || value is decimal;
+                case "TEXT":
+                    return value is string;
+                case "BLOB":
+                    return value is byte[] || value is System.IO.Stream;
+                case "NUMERIC":
+                    return value is int || value is long || value is float || value is double || value is decimal;
+                default:
+                    return false;
             }
         }
 

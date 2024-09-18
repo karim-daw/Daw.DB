@@ -14,6 +14,8 @@ namespace Daw.DB.Data.APIs
         void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record, string connectionString);
         void DeleteRecord(string tableName, object id, string connectionString);
         string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> record, string connectionString);
+        string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
+        string AddDictionaryRecordBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
     }
     public class GhClientApi : IGhClientApi
     {
@@ -101,6 +103,43 @@ namespace Daw.DB.Data.APIs
             {
                 // add the record to the table
                 _dictionaryHandler.AddRecordsInTransaction(tableName, records, connectionString);
+
+                // return the record added message wth the record details as a string
+                var stringRecord = records.ToString();
+                return $"Record added to table '{tableName}' successfully. Record: {stringRecord}";
+            }
+            catch (System.Exception ex)
+            {
+                return $"Error adding record to table '{tableName}': {ex.Message}";
+            }
+        }
+
+
+        // add dicitonary bath 
+        public string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        {
+            try
+            {
+                // add the record to the table
+                _dictionaryHandler.AddRecordsBatch(tableName, records, connectionString);
+
+                // return the record added message wth the record details as a string
+                var stringRecord = records.ToString();
+                return $"Record added to table '{tableName}' successfully. Record: {stringRecord}";
+            }
+            catch (System.Exception ex)
+            {
+                return $"Error adding record to table '{tableName}': {ex.Message}";
+            }
+        }
+
+        // add dicitonary bath in transaction
+        public string AddDictionaryRecordBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        {
+            try
+            {
+                // add the record to the table
+                _dictionaryHandler.AddRecordsBatchInTransaction(tableName, records, connectionString);
 
                 // return the record added message wth the record details as a string
                 var stringRecord = records.ToString();

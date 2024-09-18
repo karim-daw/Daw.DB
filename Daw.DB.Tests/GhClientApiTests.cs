@@ -75,6 +75,37 @@ namespace Daw.DB.Tests
 
         }
 
+        // test adding batch records
+        [TestMethod]
+        public void AddDictionaryRecordBatch_ShouldAddRecordsSuccessfully()
+        {
+            // Arrange
+            string tableName = "TestTable";
+            var columns = new Dictionary<string, string>
+            {
+                { "Name", "TEXT" }
+            };
+
+            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+
+            var records = new[]
+            {
+                new Dictionary<string, object> { { "Name", "Record1" } },
+                new Dictionary<string, object> { { "Name", "Record2" } }
+            };
+
+            // Act
+            _ghClientApi.AddDictionaryRecordBatch(tableName, records, _connectionString);
+
+            // Assert
+            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName, _connectionString);
+            Assert.AreEqual(2, allRecords.Count(), "Records were not added successfully.");
+
+            // use select in assert to get the record
+            Assert.AreEqual("Record1", allRecords.Select(x => x.Name).First(), "First record was not added with the correct value.");
+            Assert.AreEqual("Record2", allRecords.Select(x => x.Name).Last(), "Second record was not added with the correct value.");
+        }
+
         [TestMethod]
         public void UpdateDictionaryRecord_ShouldUpdateRecordSuccessfully()
         {
