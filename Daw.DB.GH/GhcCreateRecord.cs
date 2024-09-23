@@ -61,12 +61,6 @@ namespace Daw.DB.GH
 
             try
             {
-                foreach (var json in jsonRecords)
-                {
-                    // Deserialize JSON string to dictionary
-                    var record = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
-                    records.Add(record);
-                }
 
                 string connectionString = SQLiteConnectionFactory.ConnectionString;
 
@@ -77,16 +71,15 @@ namespace Daw.DB.GH
                            "component on the canvas, if a connection string is outputted";
                 }
 
-                // If there are multiple records, use a batch insert
-                if (records.Count > 1)
+                foreach (var json in jsonRecords)
                 {
-                    _eventfulGhClientApi.AddDictionaryRecordBatch(tableName, records, connectionString);
+                    // Deserialize JSON string to dictionary
+                    var record = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                    records.Add(record);
                 }
-                else
-                {
-                    // Single record insert
-                    _eventfulGhClientApi.AddDictionaryRecord(tableName, records[0], connectionString);
-                }
+
+                _eventfulGhClientApi.AddDictionaryRecordBatch(tableName, records, connectionString);
+
 
                 return "Record(s) added successfully.";
             }
