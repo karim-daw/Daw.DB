@@ -79,6 +79,7 @@ namespace Daw.DB.Tests
             Assert.IsTrue(_eventRaised, "The TableChanged event was not raised as expected.");
         }
 
+
         [TestMethod]
         public void UpdateDictionaryRecord_ShouldRaiseTableChangedEvent()
         {
