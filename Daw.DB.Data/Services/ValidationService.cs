@@ -6,10 +6,35 @@ namespace Daw.DB.Data.Services
 {
     public interface IValidationService
     {
+        /// <summary>
+        /// Validates the table name by checking if it contains only alphanumeric characters and underscores.
+        /// </summary>
+        /// <param name="tableName"></param>
         void ValidateTableName(string tableName);
+
+        /// <summary>
+        /// Validates the column names and types. Checks if the column names contain only alphanumeric characters and underscores.
+        /// </summary>
+        /// <param name="columns"></param>
         void ValidateColumns(Dictionary<string, string> columns);
+
+        /// <summary>
+        /// Validates the record by checking if the column names contain only alphanumeric characters and underscores.
+        /// </summary>
+        /// <param name="record"></param>
         void ValidateRecord(Dictionary<string, object> record);
+
+        /// <summary>
+        /// Validates the id by checking if it is not null. 
+        /// </summary>
+        /// <param name="id"></param>
         void ValidateId(object id);
+
+        /// <summary>
+        /// Validates the record against the columns and their types. This uses the column metadata to validate the record.
+        /// </summary>
+        /// <param name="record"></param>
+        /// <param name="columnMetadata"></param>
         void ValidateRecordAgainstColumns(Dictionary<string, object> record, Dictionary<string, string> columnMetadata); // New method for validating record against columns and their types
     }
 
