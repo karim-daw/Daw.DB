@@ -89,6 +89,15 @@ namespace Daw.DB.GH
         private string CreateRecords(string tableName, List<string> recordKeys, List<object> recordValues)
         {
 
+
+            string connectionString = SQLiteConnectionFactory.ConnectionString;
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                return "Connection string has not been set yet. " +
+                    "You have to create a database first. Lay down a ConnectionString " +
+                    "component on the canvas, if a connection string is outputted";
+            }
             // create a list of dictionaries
             var recordValuesList = new List<Dictionary<string, object>>();
             foreach (string key in recordKeys)
@@ -99,15 +108,6 @@ namespace Daw.DB.GH
                     record.Add(recordKeys[i], recordValues[i]);
                 }
                 recordValuesList.Add(record);
-            }
-
-            string connectionString = SQLiteConnectionFactory.ConnectionString;
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                return "Connection string has not been set yet. " +
-                    "You have to create a database first. Lay down a ConnectionString " +
-                    "component on the canvas, if a connection string is outputted";
             }
             try
             {
