@@ -1,5 +1,8 @@
 ﻿using Daw.DB.Data.APIs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
+using System.Reflection;
 
 namespace Daw.DB.Data
 {
@@ -13,7 +16,14 @@ namespace Daw.DB.Data
         {
             if (_eventDrivenGhClientApi == null)
             {
-                var serviceProvider = ServiceConfiguration.ConfigureServices();
+                // Load configuration from appsettings.json located in the same directory as the executing assembly
+                var configuration = new ConfigurationBuilder()
+                                    .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)) // Use the directory of the executing assembly
+                                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                                    .Build();
+
+                // Configure services based on the loaded configuration
+                var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
                 _eventDrivenGhClientApi = serviceProvider.GetRequiredService<IEventfulGhClientApi>();
             }
             return _eventDrivenGhClientApi;
@@ -23,7 +33,14 @@ namespace Daw.DB.Data
         {
             if (_clientApi == null)
             {
-                var serviceProvider = ServiceConfiguration.ConfigureServices();
+                // Load configuration from appsettings.json located in the same directory as the executing assembly
+                var configuration = new ConfigurationBuilder()
+                                    .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)) // Use the directory of the executing assembly
+                                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                                    .Build();
+
+                // Configure services based on the loaded configuration
+                var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
                 _clientApi = serviceProvider.GetRequiredService<IGenericClientApi>();
             }
             return _clientApi;
@@ -31,14 +48,21 @@ namespace Daw.DB.Data
 
         /// <summary>
         /// Get Grasshopper client api
-        /// Basic access ot functionality for CRUD operations
+        /// Basic access to functionality for CRUD operations
         /// </summary>
         /// <returns></returns>
         public static IGhClientApi GetGhClientApi()
         {
             if (_ghClientApi == null)
             {
-                var serviceProvider = ServiceConfiguration.ConfigureServices();
+                // Load configuration from appsettings.json located in the same directory as the executing assembly
+                var configuration = new ConfigurationBuilder()
+                                    .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)) // Use the directory of the executing assembly
+                                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                                    .Build();
+
+                // Configure services based on the loaded configuration
+                var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
                 _ghClientApi = serviceProvider.GetRequiredService<IGhClientApi>();
             }
             return _ghClientApi;
