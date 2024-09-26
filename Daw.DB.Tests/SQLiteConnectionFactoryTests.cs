@@ -1,4 +1,6 @@
 ﻿using Daw.DB.Data.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Data;
@@ -9,18 +11,48 @@ namespace Daw.DB.Tests
     [TestClass]
     public class SQLiteConnectionFactoryTests
     {
-        private SQLiteConnectionFactory _factory;
+        private ISQLiteConnectionFactory _factory;
+
+        private string _databaseFilePath;
+        private string _connectionString;
 
         [TestInitialize]
         public void Setup()
         {
-            _factory = new SQLiteConnectionFactory();
+            // _factory = new SQLiteConnectionFactory();
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            // configure the factory
+            var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
+            _factory = serviceProvider.GetRequiredService<ISQLiteConnectionFactory>();
+
+            _databaseFilePath = Path.GetTempFileName();
+            _connectionString = $"Data Source={_databaseFilePath};Version=3;";
+
+
         }
 
         [TestCleanup]
         public void Cleanup()
         {
             _factory = null;
+
+            // delete the temp file
+            if (File.Exists(_databaseFilePath))
+            {
+                try
+                {
+                    File.Delete(_databaseFilePath);
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine($"Failed to delete the file {_databaseFilePath}: {ex.Message}");
+                }
+            }
+
         }
 
         [TestMethod]
@@ -74,20 +106,14 @@ namespace Daw.DB.Tests
         [TestMethod]
         public void TestCreateConnection_ValidConnectionString_ReturnsSQLiteConnection()
         {
-            // arrange
-            string tempFilePath = Path.GetTempFileName();
-            string connectionString = $"Data Source={tempFilePath};Version=3;";
 
             // act
-            using (var connection = _factory.CreateConnection(connectionString))
+            using (var connection = _factory.CreateConnection(_connectionString))
             {
                 // assert
                 Assert.IsNotNull(connection);
                 Assert.IsInstanceOfType(connection, typeof(IDbConnection));
             }
-
-            // cleanup
-            File.Delete(tempFilePath);
         }
 
         [TestMethod]
@@ -112,19 +138,19 @@ namespace Daw.DB.Tests
         [TestMethod]
         public void TestCreateConnectionFromFilePath_ValidPath_ReturnsSQLiteConnection()
         {
-            // arrange
-            string tempFilePath = Path.GetTempFileName();
+            // if postgress is used, skip this test
+            if (!string.IsNullOrWhiteSpace(_connectionString))
+            {
+                return;
+            }
 
             // act
-            using (var connection = _factory.CreateConnectionFromFilePath(tempFilePath))
+            using (var connection = _factory.CreateConnectionFromFilePath(_databaseFilePath))
             {
                 // assert
                 Assert.IsNotNull(connection);
                 Assert.IsInstanceOfType(connection, typeof(IDbConnection));
             }
-
-            // cleanup
-            File.Delete(tempFilePath);
         }
     }
 }
