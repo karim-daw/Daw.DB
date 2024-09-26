@@ -38,3 +38,7 @@ artifacts/
 
 # Ignore sensitive configuration files (if applicable)
 appsettings.*.json
+
+Daw.DB.Data/appsettings.json
+
+Daw.DB.Tests/appsettings.json
