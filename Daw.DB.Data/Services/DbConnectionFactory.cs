@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
@@ -9,10 +10,15 @@ namespace Daw.DB.Data.Services
     public interface IDatabaseConnectionFactory
     {
         IDbConnection CreateConnection(string connectionString);
+    }
+
+    public interface ISQLiteConnectionFactory : IDatabaseConnectionFactory
+    {
         IDbConnection CreateConnectionFromFilePath(string dbPath);
     }
 
-    public class SQLiteConnectionFactory : IDatabaseConnectionFactory
+
+    public class SQLiteConnectionFactory : ISQLiteConnectionFactory
     {
 
         static public string ConnectionString { get; set; }
@@ -70,4 +76,18 @@ namespace Daw.DB.Data.Services
 
 
     }
+
+    // posgres connection factory
+    public class PostgresConnectionFactory : IDatabaseConnectionFactory
+    {
+        public IDbConnection CreateConnection(string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new ArgumentException("Connection string must be provided.", nameof(connectionString));
+            }
+            return new NpgsqlConnection(connectionString);
+        }
+    }
+
 }
