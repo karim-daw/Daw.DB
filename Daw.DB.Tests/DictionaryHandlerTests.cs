@@ -1,5 +1,5 @@
-﻿using Daw.DB.Data;
-using Daw.DB.Data.Services;
+﻿using Daw.DB.Data.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -21,7 +21,13 @@ namespace Daw.DB.Tests
         public void Setup()
         {
             // Configure the DI container and resolve the DictionaryHandler
-            var serviceProvider = ServiceConfiguration.ConfigureServices();
+            // Load configuration from appsettings.json
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            // Configure services based on the loaded configuration
+            var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
             _dictionaryHandler = serviceProvider.GetRequiredService<IDictionaryHandler>();
 
             _databaseFilePath = Path.GetTempFileName();

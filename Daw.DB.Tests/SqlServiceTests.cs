@@ -1,4 +1,5 @@
 ﻿using Daw.DB.Data.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -9,9 +10,7 @@ using System.Linq;
 
 namespace Daw.DB.Tests
 {
-    /// <summary>
-    /// Summary description for SqlServiceTests
-    /// </summary>
+
     [TestClass]
     public class SqlServiceTests
     {
@@ -23,15 +22,22 @@ namespace Daw.DB.Tests
         [TestInitialize]
         public void Setup()
         {
-            var serviceProvice = ServiceConfiguration.ConfigureServices();
-            _sqlService = serviceProvice.GetRequiredService<ISqlService>();
+            // Load configuration from appsettings.json
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            // Configure services based on the loaded configuration
+            var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
+            _sqlService = serviceProvider.GetRequiredService<ISqlService>();
+
 
             _databaseFilePath = Path.GetTempFileName();
             _connectionString = $"Data Source={_databaseFilePath};Version=3;";
 
+
         }
-
-
 
 
         [TestCleanup]
@@ -53,28 +59,6 @@ namespace Daw.DB.Tests
                 }
             }
         }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
 
         [TestMethod]
         public void CreateTable_Success()

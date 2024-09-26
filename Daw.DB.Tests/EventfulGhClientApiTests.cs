@@ -1,4 +1,5 @@
 ﻿using Daw.DB.Data.APIs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -18,8 +19,13 @@ namespace Daw.DB.Tests
         [TestInitialize]
         public void Setup()
         {
-            // Configure the DI container and resolve the EventfulGhClientApi
-            var serviceProvider = ServiceConfiguration.ConfigureServices();
+            // Load configuration from appsettings.json
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            // Configure services based on the loaded configuration
+            var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
             _eventfulGhClientApi = serviceProvider.GetRequiredService<IEventfulGhClientApi>();
 
             _databaseFilePath = Path.GetTempFileName();
