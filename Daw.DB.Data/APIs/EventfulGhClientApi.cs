@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Daw.DB.Data.APIs
@@ -240,6 +240,10 @@ namespace Daw.DB.Data.APIs
             return result;
         }
 
+        public IEnumerable<dynamic> GetTables(string connectionString)
+        {
+            return _ghClientApi.GetTables(connectionString);
+        }
 
 
         /// <summary>
@@ -260,7 +264,10 @@ namespace Daw.DB.Data.APIs
             _tableChangePublisher.TableChanged -= handler;
         }
 
-
+        public string CreateTables(IEnumerable<string> tableNames, IEnumerable<Dictionary<string, string>> columns, string connectionString)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

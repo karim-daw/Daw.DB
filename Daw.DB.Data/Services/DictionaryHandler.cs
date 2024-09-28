@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Daw.DB.Data.Services
@@ -7,6 +7,9 @@ namespace Daw.DB.Data.Services
     {
         void CreateTable(string tableName, Dictionary<string, string> columns, string connectionString);
         void DeleteTable(string tableName, string connectionString);
+        IEnumerable<dynamic> GetTables(string connectionString);
+
+
         void AddRecord(string tableName, Dictionary<string, object> record, string connectionString);
         void AddRecordsInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
         IEnumerable<dynamic> GetAllRecords(string tableName, string connectionString);
@@ -56,6 +59,7 @@ namespace Daw.DB.Data.Services
             var createTableQuery = _queryBuilderService.BuildCreateTableQuery(tableName, columns);
             _sqlService.ExecuteCommand(createTableQuery, connectionString);
         }
+
         public void DeleteTable(string tableName, string connectionString)
         {
             var checkTableExistsQuery = _queryBuilderService.BuildCheckTableExistsQuery(tableName);
@@ -69,6 +73,13 @@ namespace Daw.DB.Data.Services
 
             var deleteTableQuery = _queryBuilderService.BuildDeleteTableQuery(tableName);
             _sqlService.ExecuteCommand(deleteTableQuery, connectionString);
+        }
+
+        public IEnumerable<dynamic> GetTables(string connectionString)
+        {
+            var getAllTableNamesQuery = _queryBuilderService.BuildGetAllTableNamesQuery();
+            return _sqlService.ExecuteQuery(getAllTableNamesQuery, connectionString).Select(x => x.name).ToList();
+
         }
 
         public void AddRecord(string tableName, Dictionary<string, object> record, string connectionString)
