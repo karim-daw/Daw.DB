@@ -55,6 +55,69 @@ namespace Daw.DB.Tests
             }
         }
 
+        //Test delete table
+        [TestMethod]
+        public void DeleteTable_ShouldDeleteTableSuccessfully()
+        {
+            // Arrange
+            string tableName = "TestTable";
+            var columns = new Dictionary<string, string>
+            {
+                { "Name", "TEXT" }
+            };
+
+            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+
+            // Act
+            _ghClientApi.DeleteTable(tableName, _connectionString);
+
+            // Assert
+            // check all table names and see if the table is deleted
+            var allTableNames = _ghClientApi.GetTables(_connectionString);
+            var tableExists = allTableNames.Contains(tableName);
+            Assert.IsFalse(tableExists, "Table was not deleted successfully.");
+        }
+
+        [ExpectedException(typeof(Exception))]
+        [TestMethod]
+        public void DeleteTable_ShouldThrowExceptionWhenTableDoesNotExist()
+        {
+            // Arrange
+            string tableName = "NonExistingTable";
+
+            // Act
+            _ghClientApi.DeleteTable(tableName, _connectionString);
+        }
+
+        // more tests for delete table
+        [TestMethod]
+        public void DeleteTable_ShouldDeleteWithManyTables()
+        {
+            // Arrange 
+            string tableName1 = "TestTable1";
+            string tableName2 = "TestTable2";
+
+            var columns = new Dictionary<string, string>
+            {
+                { "Name", "TEXT" }
+            };
+
+            _ghClientApi.CreateTable(tableName1, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName2, columns, _connectionString);
+
+            // Act
+            _ghClientApi.DeleteTable(tableName1, _connectionString);
+
+            // Assert
+            var allTableNames = _ghClientApi.GetTables(_connectionString);
+            var tableExists = allTableNames.Contains(tableName1);
+            Assert.IsFalse(tableExists, "Table was not deleted successfully.");
+
+            var otherTableExists = allTableNames.Contains(tableName2);
+            Assert.IsTrue(otherTableExists, "Other table was deleted.");
+
+        }
+
         [TestMethod]
         public void AddDictionaryRecord_ShouldAddRecordSuccessfully()
         {

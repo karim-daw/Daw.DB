@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Daw.DB.Data.APIs
@@ -232,6 +232,14 @@ namespace Daw.DB.Data.APIs
             _ghClientApi.DeleteRecord(tableName, id, connectionString);
             _tableChangePublisher.PublishTableChanged(tableName, "DeleteRecord");
         }
+
+        public string DeleteTable(string tableName, string connectionString)
+        {
+            var result = _ghClientApi.DeleteTable(tableName, connectionString);
+            _tableChangePublisher.PublishTableChanged(tableName, "DeleteTable");
+            return result;
+        }
+
 
 
         /// <summary>

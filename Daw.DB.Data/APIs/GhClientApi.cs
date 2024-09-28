@@ -226,5 +226,17 @@ namespace Daw.DB.Data.APIs
             }
         }
 
+        public string DeleteTable(string tableName, string connectionString)
+        {
+            try
+            {
+                _dictionaryHandler.DeleteTable(tableName, connectionString);
+                return $"Table '{tableName}' deleted successfully.";
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error deleting table '{tableName}': {ex.Message}");
+            }
+        }
     }
 }

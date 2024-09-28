@@ -11,7 +11,7 @@ This repository contains a comprehensive suite of Grasshopper components designe
 - [x] **GhcCreateDatabase**: Creates a new SQLite database file.
 - [x] **GhcConnectionString**: Generates and manages connection strings.
 - [x] **GhcCreateTable**: Creates tables with specified columns and data types.
-- [ ] **GhcDropTable**: Drops (deletes) an existing table.
+- [x] **GhcDropTable**: Drops (deletes) an existing table.
 - [ ] **GhcListTables**: Lists all tables in the database.
 
 
@@ -36,7 +36,7 @@ This repository contains a comprehensive suite of Grasshopper components designe
 
 - 
 ### 3. Event-Driven Components
-- **GhcEventfulReadRecords**: Reads records from a table and updates automatically when the table changes.
+- [x] GhcEventfulReadRecords**: Reads records from a table and updates automatically when the table changes.
 - **GhcEventfulUpdateRecord**: Listens for changes in a table and automatically updates specific records.
 - **GhcSubscribeToTableEvents**: Allows users to subscribe to table changes and trigger actions based on those events.
 

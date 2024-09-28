@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Daw.DB.Data.Services
@@ -6,6 +6,7 @@ namespace Daw.DB.Data.Services
     public interface IDictionaryHandler
     {
         void CreateTable(string tableName, Dictionary<string, string> columns, string connectionString);
+        void DeleteTable(string tableName, string connectionString);
         void AddRecord(string tableName, Dictionary<string, object> record, string connectionString);
         void AddRecordsInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
         IEnumerable<dynamic> GetAllRecords(string tableName, string connectionString);
@@ -54,6 +55,20 @@ namespace Daw.DB.Data.Services
 
             var createTableQuery = _queryBuilderService.BuildCreateTableQuery(tableName, columns);
             _sqlService.ExecuteCommand(createTableQuery, connectionString);
+        }
+        public void DeleteTable(string tableName, string connectionString)
+        {
+            var checkTableExistsQuery = _queryBuilderService.BuildCheckTableExistsQuery(tableName);
+            var tableExists = _sqlService.ExecuteQuery(checkTableExistsQuery, connectionString).Any();
+
+            if (!tableExists)
+            {
+                throw new System.InvalidOperationException("Table does not exist.");
+            }
+
+
+            var deleteTableQuery = _queryBuilderService.BuildDeleteTableQuery(tableName);
+            _sqlService.ExecuteCommand(deleteTableQuery, connectionString);
         }
 
         public void AddRecord(string tableName, Dictionary<string, object> record, string connectionString)
@@ -251,5 +266,7 @@ namespace Daw.DB.Data.Services
 
             _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
         }
+
+
     }
 }
