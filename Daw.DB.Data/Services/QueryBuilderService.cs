@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,6 +13,8 @@ namespace Daw.DB.Data.Services
         string BuildSelectQuery(string tableName, string whereClause = null);
         string BuildDeleteQuery(string tableName);
         (string query, Dictionary<string, object> parameters) BuildBatchInsertQuery(string tableName, IEnumerable<Dictionary<string, object>> records, int batchSize = 1000);
+        string BuildDeleteTableQuery(string tableName);
+        string BuildGetAllTableNamesQuery();
     }
 
     public class QueryBuilderService : IQueryBuilderService
@@ -21,7 +23,8 @@ namespace Daw.DB.Data.Services
 
         public string BuildCreateTableQuery(string tableName, Dictionary<string, string> columns)
         {
-            EnsureIdColumn(columns);
+            // Inject Id column if it doesn't exist
+            columns = InjectIdColumn(columns);
             var columnsDefinition = string.Join(", ", columns.Select(kv => $"{kv.Key} {kv.Value}"));
             return $"CREATE TABLE {tableName} ({columnsDefinition})";
         }
@@ -122,12 +125,29 @@ namespace Daw.DB.Data.Services
             return $"DELETE FROM {tableName} WHERE {DefaultIdColumn} = @{DefaultIdColumn}";
         }
 
-        private void EnsureIdColumn(Dictionary<string, string> columns)
+        private Dictionary<string, string> InjectIdColumn(Dictionary<string, string> columns)
         {
-            if (!columns.ContainsKey(DefaultIdColumn))
+            Dictionary<string, string> columnsCopy = new Dictionary<string, string>(columns);
+
+            // create copy of columns dictionary quickly
+
+            if (!columnsCopy.ContainsKey(DefaultIdColumn))
             {
-                columns.Add(DefaultIdColumn, "INTEGER PRIMARY KEY AUTOINCREMENT");
+                columnsCopy.Add(DefaultIdColumn, "INTEGER PRIMARY KEY AUTOINCREMENT");
             }
+
+            return columnsCopy;
+        }
+
+        public string BuildDeleteTableQuery(string tableName)
+        {
+            return $"DROP TABLE IF EXISTS {tableName}";
+
+        }
+
+        public string BuildGetAllTableNamesQuery()
+        {
+            return "SELECT name FROM sqlite_master WHERE type='table'";
         }
     }
 }

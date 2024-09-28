@@ -233,6 +233,18 @@ namespace Daw.DB.Data.APIs
             _tableChangePublisher.PublishTableChanged(tableName, "DeleteRecord");
         }
 
+        public string DeleteTable(string tableName, string connectionString)
+        {
+            var result = _ghClientApi.DeleteTable(tableName, connectionString);
+            _tableChangePublisher.PublishTableChanged(tableName, "DeleteTable");
+            return result;
+        }
+
+        public IEnumerable<dynamic> GetTables(string connectionString)
+        {
+            return _ghClientApi.GetTables(connectionString);
+        }
+
 
         /// <summary>
         /// Subscribe to table change events.
@@ -252,7 +264,10 @@ namespace Daw.DB.Data.APIs
             _tableChangePublisher.TableChanged -= handler;
         }
 
-
+        public string CreateTables(IEnumerable<string> tableNames, IEnumerable<Dictionary<string, string>> columns, string connectionString)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

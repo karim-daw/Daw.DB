@@ -8,6 +8,14 @@ namespace Daw.DB.Data.APIs
     {
         string CreateConnection(string connectionString);
         string CreateTable(string tableName, Dictionary<string, string> columns, string connectionString);
+        string DeleteTable(string tableName, string connectionString);
+
+        // TODO: Create many tables
+        string CreateTables(IEnumerable<string> tableNames, IEnumerable<Dictionary<string, string>> columns, string connectionString);
+
+
+        IEnumerable<dynamic> GetTables(string connectionString);
+
         string AddDictionaryRecord(string tableName, Dictionary<string, object> record, string connectionString);
         IEnumerable<dynamic> GetAllDictionaryRecords(string tableName, string connectionString);
         dynamic GetDictionaryRecordById(string tableName, object id, string connectionString);
@@ -226,5 +234,35 @@ namespace Daw.DB.Data.APIs
             }
         }
 
+        public string DeleteTable(string tableName, string connectionString)
+        {
+            try
+            {
+                _dictionaryHandler.DeleteTable(tableName, connectionString);
+                return $"Table '{tableName}' deleted successfully.";
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error deleting table '{tableName}': {ex.Message}");
+            }
+        }
+
+        public IEnumerable<dynamic> GetTables(string connectionString)
+        {
+            try
+            {
+                IEnumerable<dynamic> tables = _dictionaryHandler.GetTables(connectionString);
+                return tables;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception($"Error retrieving tables: {ex.Message}");
+            }
+        }
+
+        public string CreateTables(IEnumerable<string> tableNames, IEnumerable<Dictionary<string, string>> columns, string connectionString)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

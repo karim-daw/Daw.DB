@@ -135,11 +135,9 @@ namespace Daw.DB.Tests
 
             // create list of sql commands to execute
 
-
-
-
             // act
             _sqlService.ExecuteInTransaction(sqlCommands, _connectionString);
+
         }
 
 
