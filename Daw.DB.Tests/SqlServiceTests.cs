@@ -10,14 +10,13 @@ using System.Linq;
 
 namespace Daw.DB.Tests
 {
-
     [TestClass]
     public class SqlServiceTests
     {
         private ISqlService _sqlService;
+        private IDatabaseContext _databaseContext;
 
         private string _databaseFilePath;
-        private string _connectionString;
 
         [TestInitialize]
         public void Setup()
@@ -25,20 +24,21 @@ namespace Daw.DB.Tests
             // Load configuration from appsettings.json
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                // Adjust the file name and path as needed
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .Build();
 
             // Configure services based on the loaded configuration
             var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
             _sqlService = serviceProvider.GetRequiredService<ISqlService>();
+            _databaseContext = serviceProvider.GetRequiredService<IDatabaseContext>();
 
+            // Set up a temporary database file path
+            _databaseFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
 
-            _databaseFilePath = Path.GetTempFileName();
-            _connectionString = $"Data Source={_databaseFilePath};Version=3;";
-
-
+            // Set the connection string in the database context
+            _databaseContext.ConnectionString = $"Data Source={_databaseFilePath};Version=3;";
         }
-
 
         [TestCleanup]
         public void Cleanup()
@@ -63,83 +63,85 @@ namespace Daw.DB.Tests
         [TestMethod]
         public void CreateTable_Success()
         {
-            // arrange object
-            string sql = "CREATE TABLE TestTable (Name TEXT)";
-            _sqlService.ExecuteCommand(sql, _connectionString);
+            // Arrange
+            string sqlCreateTable = "CREATE TABLE TestTable (Name TEXT)";
+            _sqlService.ExecuteCommand(sqlCreateTable);
 
-            // act
-            var result = _sqlService.ExecuteQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='TestTable'", _connectionString);
+            // Act
+            var result = _sqlService.ExecuteQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='TestTable'");
 
-
-            // assert
+            // Assert
             Assert.AreEqual(1, result.Count());
         }
 
-        // create test method for failure of creating table
-        [ExpectedException(typeof(SQLiteException))]
         [TestMethod]
+        [ExpectedException(typeof(SQLiteException))]
         public void WrongSql_Failure()
         {
-            // arrange object to fail creating table
+            // Arrange: Incorrect SQL syntax to create a table
             string sql = "CREATE TABLES TestTable (Name TEXT)";
-            _sqlService.ExecuteCommand(sql, _connectionString);
+
+            // Act
+            _sqlService.ExecuteCommand(sql);
+
+            // Assert: Exception is expected
         }
 
         [TestMethod]
         public void InsertData_Success()
         {
-            // arrange object
-            string sql = "CREATE TABLE TestTable (Name TEXT)";
-            _sqlService.ExecuteCommand(sql, _connectionString);
+            // Arrange
+            string sqlCreateTable = "CREATE TABLE TestTable (Name TEXT)";
+            _sqlService.ExecuteCommand(sqlCreateTable);
 
-            // act
-            _sqlService.ExecuteCommand("INSERT INTO TestTable (Name) VALUES ('Test')", _connectionString);
-            var result = _sqlService.ExecuteQuery("SELECT * FROM TestTable", _connectionString);
+            // Act
+            _sqlService.ExecuteCommand("INSERT INTO TestTable (Name) VALUES ('Test')");
+            var result = _sqlService.ExecuteQuery("SELECT * FROM TestTable");
 
-            // assert
+            // Assert
             Assert.AreEqual(1, result.Count());
         }
 
-        // test method for transactions that will succeed
         [TestMethod]
         public void ExecuteInTransaction_Success()
         {
-            // arrange object
-            string sql = "CREATE TABLE TestTable (Name TEXT)";
-            _sqlService.ExecuteCommand(sql, _connectionString);
+            // Arrange
+            string sqlCreateTable = "CREATE TABLE TestTable (Name TEXT)";
+            _sqlService.ExecuteCommand(sqlCreateTable);
 
-            IEnumerable<(string sql, object parameters)> sqlCommands = new List<(string sql, object parameters)>
+            var sqlCommands = new List<(string sql, object parameters)>
             {
                 ("INSERT INTO TestTable (Name) VALUES ('Test1')", null),
                 ("INSERT INTO TestTable (Name) VALUES ('Test2')", null)
             };
 
-            // act
-            _sqlService.ExecuteInTransaction(sqlCommands, _connectionString);
-            var result = _sqlService.ExecuteQuery("SELECT * FROM TestTable", _connectionString);
+            // Act
+            _sqlService.ExecuteInTransaction(sqlCommands);
+            var result = _sqlService.ExecuteQuery("SELECT * FROM TestTable");
 
-            // assert
+            // Assert
             Assert.AreEqual(2, result.Count());
         }
 
-        // test method for transactions that will fail if one of the commands is wrong
-        [ExpectedException(typeof(Exception))]
         [TestMethod]
+        [ExpectedException(typeof(Exception))]
         public void ExecuteInTransaction_Failure()
         {
-            // arrange object
-            string sql = "CREATE TABLE TestTable (Name TEXT)";
-            _sqlService.ExecuteCommand(sql, _connectionString);
+            // Arrange
+            string sqlCreateTable = "CREATE TABLE TestTable (Name TEXT)";
+            _sqlService.ExecuteCommand(sqlCreateTable);
 
-            IEnumerable<(string sql, object parameters)> sqlCommands = null;
+            var sqlCommands = new List<(string sql, object parameters)>
+            {
+                ("INSERT INTO TestTable (Name) VALUES ('Test1')", null),
+                ("INVALID SQL COMMAND", null), // This will cause the transaction to fail
+                ("INSERT INTO TestTable (Name) VALUES ('Test3')", null)
+            };
 
-            // create list of sql commands to execute
+            // Act
+            _sqlService.ExecuteInTransaction(sqlCommands);
 
-            // act
-            _sqlService.ExecuteInTransaction(sqlCommands, _connectionString);
-
+            // Assert: Exception is expected
         }
-
-
     }
 }
