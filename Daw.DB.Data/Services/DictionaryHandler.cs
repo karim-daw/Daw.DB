@@ -5,21 +5,20 @@ namespace Daw.DB.Data.Services
 {
     public interface IDictionaryHandler
     {
-        void CreateTable(string tableName, Dictionary<string, string> columns, string connectionString);
-        void DeleteTable(string tableName, string connectionString);
-        IEnumerable<dynamic> GetTables(string connectionString);
+        void CreateTable(string tableName, Dictionary<string, string> columns);
+        void DeleteTable(string tableName);
+        IEnumerable<dynamic> GetTables();
 
-
-        void AddRecord(string tableName, Dictionary<string, object> record, string connectionString);
-        void AddRecordsInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
-        IEnumerable<dynamic> GetAllRecords(string tableName, string connectionString);
-        dynamic GetRecordById(string tableName, object id, string connectionString);
-        void UpdateRecord(string tableName, object id, Dictionary<string, object> updatedValues, string connectionString);
-        void UpdateRecordsInTransaction(string tableName, IEnumerable<KeyValuePair<object, Dictionary<string, object>>> records, string connectionString);
-        void DeleteRecord(string tableName, object id, string connectionString);
-        void DeleteRecordsInTransaction(string tableName, IEnumerable<object> ids, string connectionString);
-        void AddRecordsBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
-        void AddRecordsBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
+        void AddRecord(string tableName, Dictionary<string, object> record);
+        void AddRecordsInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records);
+        IEnumerable<dynamic> GetAllRecords(string tableName);
+        dynamic GetRecordById(string tableName, object id);
+        void UpdateRecord(string tableName, object id, Dictionary<string, object> updatedValues);
+        void UpdateRecordsInTransaction(string tableName, IEnumerable<KeyValuePair<object, Dictionary<string, object>>> records);
+        void DeleteRecord(string tableName, object id);
+        void DeleteRecordsInTransaction(string tableName, IEnumerable<object> ids);
+        void AddRecordsBatch(string tableName, IEnumerable<Dictionary<string, object>> records);
+        void AddRecordsBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records);
     }
 
     public class DictionaryHandler : IDictionaryHandler
@@ -42,13 +41,13 @@ namespace Daw.DB.Data.Services
             _sqlService = sqlService;
         }
 
-        public void CreateTable(string tableName, Dictionary<string, string> columns, string connectionString)
+        public void CreateTable(string tableName, Dictionary<string, string> columns)
         {
             _validationService.ValidateTableName(tableName);
 
             // Check if the table already exists
             var checkTableExistsQuery = _queryBuilderService.BuildCheckTableExistsQuery(tableName);
-            var tableExists = _sqlService.ExecuteQuery(checkTableExistsQuery, connectionString).Any();
+            var tableExists = _sqlService.ExecuteQuery(checkTableExistsQuery).Any();
             if (tableExists)
             {
                 throw new System.InvalidOperationException("Table already exists.");
@@ -57,13 +56,13 @@ namespace Daw.DB.Data.Services
             _validationService.ValidateColumns(columns);
 
             var createTableQuery = _queryBuilderService.BuildCreateTableQuery(tableName, columns);
-            _sqlService.ExecuteCommand(createTableQuery, connectionString);
+            _sqlService.ExecuteCommand(createTableQuery);
         }
 
-        public void DeleteTable(string tableName, string connectionString)
+        public void DeleteTable(string tableName)
         {
             var checkTableExistsQuery = _queryBuilderService.BuildCheckTableExistsQuery(tableName);
-            var tableExists = _sqlService.ExecuteQuery(checkTableExistsQuery, connectionString).Any();
+            var tableExists = _sqlService.ExecuteQuery(checkTableExistsQuery).Any();
 
             if (!tableExists)
             {
@@ -72,26 +71,26 @@ namespace Daw.DB.Data.Services
 
 
             var deleteTableQuery = _queryBuilderService.BuildDeleteTableQuery(tableName);
-            _sqlService.ExecuteCommand(deleteTableQuery, connectionString);
+            _sqlService.ExecuteCommand(deleteTableQuery);
         }
 
-        public IEnumerable<dynamic> GetTables(string connectionString)
+        public IEnumerable<dynamic> GetTables()
         {
             var getAllTableNamesQuery = _queryBuilderService.BuildGetAllTableNamesQuery();
-            return _sqlService.ExecuteQuery(getAllTableNamesQuery, connectionString).Select(x => x.name).ToList();
+            return _sqlService.ExecuteQuery(getAllTableNamesQuery).Select(x => x.name).ToList();
 
         }
 
-        public void AddRecord(string tableName, Dictionary<string, object> record, string connectionString)
+        public void AddRecord(string tableName, Dictionary<string, object> record)
         {
             _validationService.ValidateTableName(tableName);
             _validationService.ValidateRecord(record);
 
             var insertQuery = _queryBuilderService.BuildInsertQuery(tableName, record);
-            _sqlService.ExecuteCommand(insertQuery, connectionString, record);
+            _sqlService.ExecuteCommand(insertQuery, record);
         }
 
-        public void AddRecordsInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        public void AddRecordsInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records)
         {
             var sqlCommands = new List<(string sql, object parameters)>();
 
@@ -104,7 +103,7 @@ namespace Daw.DB.Data.Services
             }
 
             // Execute all commands within a transaction
-            _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
+            _sqlService.ExecuteInTransaction(sqlCommands);
         }
 
         // TODO: still need to test this method
@@ -115,7 +114,7 @@ namespace Daw.DB.Data.Services
         /// <param name="tableName"></param>
         /// <param name="records"></param>
         /// <param name="connectionString"></param>
-        public void AddRecordsBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        public void AddRecordsBatch(string tableName, IEnumerable<Dictionary<string, object>> records)
         {
             // Validate the table name
             _validationService.ValidateTableName(tableName);
@@ -130,7 +129,7 @@ namespace Daw.DB.Data.Services
             var (batchInsertQuery, parameters) = _queryBuilderService.BuildBatchInsertQuery(tableName, records);
 
             // Execute the batch insert command with the generated query and parameters
-            _sqlService.ExecuteCommand(batchInsertQuery, connectionString, parameters);
+            _sqlService.ExecuteCommand(batchInsertQuery, parameters);
         }
 
 
@@ -142,7 +141,7 @@ namespace Daw.DB.Data.Services
         /// <param name="tableName"></param>
         /// <param name="records"></param>
         /// <param name="connectionString"></param>
-        public void AddRecordsBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        public void AddRecordsBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records)
         {
             // Validate the table name
             _validationService.ValidateTableName(tableName);
@@ -161,7 +160,7 @@ namespace Daw.DB.Data.Services
 
 
             // Wrap the batch insert in a transaction and pass the parameters
-            _sqlService.ExecuteInTransaction(batchInsertQueries, connectionString);
+            _sqlService.ExecuteInTransaction(batchInsertQueries);
         }
 
 
@@ -173,12 +172,12 @@ namespace Daw.DB.Data.Services
         /// <param name="tableName"></param>
         /// <param name="connectionString"></param>
         /// <returns></returns>
-        public IEnumerable<dynamic> GetAllRecords(string tableName, string connectionString)
+        public IEnumerable<dynamic> GetAllRecords(string tableName)
         {
             _validationService.ValidateTableName(tableName);
 
             var selectQuery = _queryBuilderService.BuildSelectQuery(tableName);
-            return _sqlService.ExecuteQuery(selectQuery, connectionString);
+            return _sqlService.ExecuteQuery(selectQuery);
         }
 
 
@@ -190,14 +189,14 @@ namespace Daw.DB.Data.Services
         /// <param name="id"></param>
         /// <param name="connectionString"></param>
         /// <returns></returns>
-        public dynamic GetRecordById(string tableName, object id, string connectionString)
+        public dynamic GetRecordById(string tableName, object id)
         {
             _validationService.ValidateTableName(tableName);
             _validationService.ValidateId(id);
 
             var whereClause = $"{DefaultIdColumn} = @Id";
             var selectQuery = _queryBuilderService.BuildSelectQuery(tableName, whereClause);
-            return _sqlService.ExecuteQuery(selectQuery, connectionString, new { Id = id }).FirstOrDefault();
+            return _sqlService.ExecuteQuery(selectQuery, new { Id = id }).FirstOrDefault();
         }
 
 
@@ -209,7 +208,7 @@ namespace Daw.DB.Data.Services
         /// <param name="id"></param>
         /// <param name="updatedValues"></param>
         /// <param name="connectionString"></param>
-        public void UpdateRecord(string tableName, object id, Dictionary<string, object> updatedValues, string connectionString)
+        public void UpdateRecord(string tableName, object id, Dictionary<string, object> updatedValues)
         {
             _validationService.ValidateTableName(tableName);
             _validationService.ValidateRecord(updatedValues);
@@ -217,7 +216,7 @@ namespace Daw.DB.Data.Services
 
             var updateQuery = _queryBuilderService.BuildUpdateQuery(tableName, updatedValues);
             updatedValues[DefaultIdColumn] = id;
-            _sqlService.ExecuteCommand(updateQuery, connectionString, updatedValues);
+            _sqlService.ExecuteCommand(updateQuery, updatedValues);
         }
 
 
@@ -228,7 +227,7 @@ namespace Daw.DB.Data.Services
         /// <param name="tableName"></param>
         /// <param name="records"></param>
         /// <param name="connectionString"></param>
-        public void UpdateRecordsInTransaction(string tableName, IEnumerable<KeyValuePair<object, Dictionary<string, object>>> records, string connectionString)
+        public void UpdateRecordsInTransaction(string tableName, IEnumerable<KeyValuePair<object, Dictionary<string, object>>> records)
         {
             IEnumerable<(string sql, object parameters)> sqlCommands = null;
 
@@ -247,19 +246,19 @@ namespace Daw.DB.Data.Services
                 sqlCommands.Append((updateQuery, updatedValues));
             }
 
-            _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
+            _sqlService.ExecuteInTransaction(sqlCommands);
         }
 
-        public void DeleteRecord(string tableName, object id, string connectionString)
+        public void DeleteRecord(string tableName, object id)
         {
             _validationService.ValidateTableName(tableName);
             _validationService.ValidateId(id);
 
             var deleteQuery = _queryBuilderService.BuildDeleteQuery(tableName);
-            _sqlService.ExecuteCommand(deleteQuery, connectionString, new { Id = id });
+            _sqlService.ExecuteCommand(deleteQuery, new { Id = id });
         }
 
-        public void DeleteRecordsInTransaction(string tableName, IEnumerable<object> ids, string connectionString)
+        public void DeleteRecordsInTransaction(string tableName, IEnumerable<object> ids)
         {
 
 
@@ -275,7 +274,7 @@ namespace Daw.DB.Data.Services
             }
 
 
-            _sqlService.ExecuteInTransaction(sqlCommands, connectionString);
+            _sqlService.ExecuteInTransaction(sqlCommands);
         }
 
 

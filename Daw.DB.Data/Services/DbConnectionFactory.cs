@@ -9,7 +9,7 @@ namespace Daw.DB.Data.Services
 
     public interface IDatabaseConnectionFactory
     {
-        IDbConnection CreateConnection(string connectionString);
+        IDbConnection CreateConnection();
     }
 
     public interface ISQLiteConnectionFactory : IDatabaseConnectionFactory
@@ -21,12 +21,21 @@ namespace Daw.DB.Data.Services
     public class SQLiteConnectionFactory : ISQLiteConnectionFactory
     {
 
-        static public string ConnectionString { get; set; }
+        private readonly IDatabaseContext _databaseContext;
+
+        // static public string ConnectionString { get; set; }
+
+        public SQLiteConnectionFactory(IDatabaseContext databaseContext)
+        {
+            _databaseContext = databaseContext;
+        }
 
 
         // Method to create a connection to an existing database using a connection string
-        public IDbConnection CreateConnection(string connectionString)
+        public IDbConnection CreateConnection()
         {
+            string connectionString = _databaseContext.ConnectionString;
+
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw new ArgumentException("Connection string must be provided.", nameof(connectionString));
@@ -49,8 +58,7 @@ namespace Daw.DB.Data.Services
                 throw new FileNotFoundException($"Database file not found at {dbPath}");
             }
 
-            string connectionString = $"Data Source={dbPath};Version=3;";
-            return CreateConnection(connectionString);
+            return CreateConnection();
         }
 
 
@@ -80,8 +88,16 @@ namespace Daw.DB.Data.Services
     // posgres connection factory
     public class PostgresConnectionFactory : IDatabaseConnectionFactory
     {
-        public IDbConnection CreateConnection(string connectionString)
+        private readonly IDatabaseContext _databaseContext;
+
+        public PostgresConnectionFactory(IDatabaseContext databaseContext)
         {
+            _databaseContext = databaseContext;
+        }
+
+        public IDbConnection CreateConnection()
+        {
+            string connectionString = _databaseContext.ConnectionString;
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw new ArgumentException("Connection string must be provided.", nameof(connectionString));

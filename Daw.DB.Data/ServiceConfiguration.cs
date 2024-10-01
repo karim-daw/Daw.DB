@@ -34,6 +34,7 @@ public static class ServiceConfiguration
         }
 
         // Register other services as needed
+        services.AddSingleton<IDatabaseContext, DatabaseContext>();
         services.AddSingleton<IQueryBuilderService, QueryBuilderService>();
         services.AddSingleton<IValidationService, ValidationService>();
         services.AddSingleton<ITableChangePublisher, TableChangePublisher>();
@@ -44,7 +45,6 @@ public static class ServiceConfiguration
         services.AddScoped(typeof(IEntityHandler<>), typeof(EntityHandler<>));
 
         // Register client APIs
-        services.AddScoped<IGenericClientApi, GenericClientApi>();
         services.AddScoped<IGhClientApi, GhClientApi>();
 
         services.AddScoped<IEventfulGhClientApi>(provider =>

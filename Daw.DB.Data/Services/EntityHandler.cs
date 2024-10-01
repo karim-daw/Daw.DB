@@ -10,12 +10,12 @@ namespace Daw.DB.Data.Services
     // TODO: use transaction services to handle transactions 
     public interface IEntityHandler<T> where T : class, IEntity
     {
-        void CreateTable(T entity, string connectionString);
-        void AddRecord(string tableName, T record, string connectionString);
-        IEnumerable<T> GetAllRecords(string tableName, string connectionString);
-        T GetRecordById(string tableName, object id, string connectionString);
-        void UpdateRecord(string tableName, object id, T updatedValues, string connectionString);
-        void DeleteRecord(string tableName, object id, string connectionString);
+        void CreateTable(T entity);
+        void AddRecord(string tableName, T record);
+        IEnumerable<T> GetAllRecords(string tableName);
+        T GetRecordById(string tableName, object id);
+        void UpdateRecord(string tableName, object id, T updatedValues);
+        void DeleteRecord(string tableName, object id);
     }
 
     public class EntityHandler<T> : IEntityHandler<T> where T : class, IEntity
@@ -32,7 +32,7 @@ namespace Daw.DB.Data.Services
             _logger = logger;
         }
 
-        public void CreateTable(T entity, string connectionString)
+        public void CreateTable(T entity)
         {
             string tableName;
             string columnsDefinition;
@@ -43,10 +43,6 @@ namespace Daw.DB.Data.Services
                 throw new System.Exception("Entity is null.");
             }
 
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new System.Exception("Connection string is empty.");
-            }
 
             // Get the table name from the entity type
             try
@@ -60,7 +56,7 @@ namespace Daw.DB.Data.Services
             }
 
             // Check if table already exists
-            if (TableExists(tableName, connectionString))
+            if (TableExists(tableName))
             {
                 throw new System.Exception($"Table {tableName} already exists.");
             }
@@ -90,7 +86,7 @@ namespace Daw.DB.Data.Services
             // Finally, execute the create table query
             try
             {
-                _sqlService.ExecuteCommand(createTableQuery, connectionString);
+                _sqlService.ExecuteCommand(createTableQuery);
             }
             catch (System.Exception ex)
             {
@@ -99,7 +95,7 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public void AddRecord(string tableName, T record, string connectionString)
+        public void AddRecord(string tableName, T record)
         {
             tableName = ValidateAndFormatTableName(tableName);
 
@@ -109,7 +105,7 @@ namespace Daw.DB.Data.Services
 
             try
             {
-                _sqlService.ExecuteCommand(insertQuery, connectionString, record);
+                _sqlService.ExecuteCommand(insertQuery, record);
             }
             catch (System.Exception ex)
             {
@@ -118,14 +114,14 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public IEnumerable<T> GetAllRecords(string tableName, string connectionString)
+        public IEnumerable<T> GetAllRecords(string tableName)
         {
             tableName = ValidateAndFormatTableName(tableName);
             var selectQuery = $"SELECT * FROM {tableName}";
 
             try
             {
-                return _sqlService.ExecuteQuery<T>(selectQuery, connectionString);
+                return _sqlService.ExecuteQuery<T>(selectQuery);
             }
             catch (System.Exception ex)
             {
@@ -134,14 +130,14 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public T GetRecordById(string tableName, object id, string connectionString)
+        public T GetRecordById(string tableName, object id)
         {
             tableName = ValidateAndFormatTableName(tableName);
             var selectQuery = $"SELECT * FROM {tableName} WHERE {DefaultIdColumn} = @Id";
 
             try
             {
-                return _sqlService.ExecuteQuery<T>(selectQuery, connectionString, new { Id = id }).FirstOrDefault();
+                return _sqlService.ExecuteQuery<T>(selectQuery, new { Id = id }).FirstOrDefault();
             }
             catch (System.Exception ex)
             {
@@ -150,7 +146,7 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public void UpdateRecord(string tableName, object id, T updatedValues, string connectionString)
+        public void UpdateRecord(string tableName, object id, T updatedValues)
         {
             tableName = ValidateAndFormatTableName(tableName);
 
@@ -165,7 +161,7 @@ namespace Daw.DB.Data.Services
 
             try
             {
-                _sqlService.ExecuteCommand(updateQuery, connectionString, updatedValues);
+                _sqlService.ExecuteCommand(updateQuery, updatedValues);
             }
             catch (System.Exception ex)
             {
@@ -174,14 +170,14 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        public void DeleteRecord(string tableName, object id, string connectionString)
+        public void DeleteRecord(string tableName, object id)
         {
             tableName = ValidateAndFormatTableName(tableName);
             var deleteQuery = $"DELETE FROM {tableName} WHERE {DefaultIdColumn} = @Id";
 
             try
             {
-                _sqlService.ExecuteCommand(deleteQuery, connectionString, new { Id = id });
+                _sqlService.ExecuteCommand(deleteQuery, new { Id = id });
             }
             catch (System.Exception ex)
             {
@@ -252,17 +248,12 @@ namespace Daw.DB.Data.Services
             return columnsDefinition;
         }
 
-        /// <summary>
-        /// Check if a table exists in the database
-        /// </summary>
-        /// <param name="connectionString"></param>
-        /// <param name="tableName"></param>
-        /// <returns></returns>
-        private bool TableExists(string tableName, string connectionString)
+
+        private bool TableExists(string tableName)
         {
             tableName = ValidateAndFormatTableName(tableName);
             string tableExistsQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name = @TableName;";
-            bool tableExists = _sqlService.ExecuteQuery(tableExistsQuery, connectionString, new { TableName = tableName }).Any();
+            bool tableExists = _sqlService.ExecuteQuery(tableExistsQuery, new { TableName = tableName }).Any();
             return tableExists;
         }
 
