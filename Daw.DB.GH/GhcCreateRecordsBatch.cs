@@ -9,20 +9,20 @@ namespace Daw.DB.GH
 {
     public class GhcCreateRecordsBatch : GH_Component
     {
-
-
         private readonly IEventfulGhClientApi _eventfulGhClientApi;
+        private readonly IDatabaseContext _databaseContext;
 
         /// <summary>
         /// Initializes a new instance of the GhcCreateRecordsBatch class.
         /// </summary>
         public GhcCreateRecordsBatch()
-          : base("GhcCreateRecordsBatch", "CRB",
-            "Create a batch of records and insert all it into the database",
+          : base("Create Records Batch", "CreateBatch",
+            "Creates a batch of records and inserts them into the database",
             "Daw.DB", "CREATE")
         {
-            // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
+            // Use the ApiFactory to get pre-configured instances
             _eventfulGhClientApi = ApiFactory.GetEventDrivenGhClientApi();
+            _databaseContext = ApiFactory.GetDatabaseContext();
         }
 
         /// <summary>
@@ -30,10 +30,10 @@ namespace Daw.DB.GH
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("TableName", "TN", "Name of the table to insert the record into", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("AddRecord", "AR", "Boolean to trigger record addition", GH_ParamAccess.item);
-            pManager.AddTextParameter("RecordKeys", "RK", "Record KEYS to add to the table", GH_ParamAccess.list);
-            pManager.AddTextParameter("RecordValues", "RV", "Record VALUES to add to the table", GH_ParamAccess.list);
+            pManager.AddTextParameter("TableName", "TN", "Name of the table to insert the records into", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("AddRecords", "AR", "Boolean to trigger record addition", GH_ParamAccess.item);
+            pManager.AddTextParameter("RecordKeys", "RK", "List of keys (column names) for the records", GH_ParamAccess.list);
+            pManager.AddTextParameter("RecordValues", "RV", "Flattened list of record values", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -50,96 +50,88 @@ namespace Daw.DB.GH
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            bool addRecord = false;
+            bool addRecords = false;
             string tableName = null;
             List<string> recordKeys = new List<string>();
-            List<object> recordValues = new List<object>();
-
-
+            List<string> recordValues = new List<string>();
 
             // Retrieve input data
             if (!DA.GetData(0, ref tableName)) return;
-            if (!DA.GetData(1, ref addRecord)) return;
+            if (!DA.GetData(1, ref addRecords)) return;
             if (!DA.GetDataList(2, recordKeys)) return;
             if (!DA.GetDataList(3, recordValues)) return;
 
-
-            // Add a record to the table
-            if (addRecord)
+            // Add records to the table
+            if (addRecords)
             {
                 string result = CreateRecords(tableName, recordKeys, recordValues);
                 DA.SetData(0, result);
             }
         }
 
-        // say if we have a table named "Buildings" with columns "Name", "Height", "Floors", "Location"
-        // and we want to add a record with values "Empire State Building", "443.2", "102", "New York"
-        // the recordKeys would be ["Name", "Height", "Floors", "Location"]
-        // the recordValues would be ["Empire State Building", "443.2", "102", "New York"]
-        // and i had a list of 10 recordValues, i would have 10 records added to the table
-
-        // [Empire State Building, 443.2, 102, New York]
-        // [Empire State Building, 443.2, 102, New York]
-        // [Empire State Building, 443.2, 102, New York]
-        // [Empire State Building, 443.2, 102, New York]
-        // [Empire State Building, 443.2, 102, New York]
-
-
         // Wrapper method
-        private string CreateRecords(string tableName, List<string> recordKeys, List<object> recordValues)
+        private string CreateRecords(string tableName, List<string> recordKeys, List<string> recordValues)
         {
-
-
-            string connectionString = SQLiteConnectionFactory.ConnectionString;
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                return "Connection string has not been set yet. " +
-                    "You have to create a database first. Lay down a ConnectionString " +
-                    "component on the canvas, if a connection string is outputted";
-            }
-            // create a list of dictionaries
-            var recordValuesList = new List<Dictionary<string, object>>();
-            foreach (string key in recordKeys)
-            {
-                var record = new Dictionary<string, object>();
-                for (int i = 0; i < recordKeys.Count; i++)
-                {
-                    record.Add(recordKeys[i], recordValues[i]);
-                }
-                recordValuesList.Add(record);
-            }
             try
             {
-                // _ghClientApi.AddDictionaryRecord(tableName, record, connectionString);
-                _eventfulGhClientApi.AddDictionaryRecordBatch(tableName, recordValuesList, connectionString);
-                return "Record added successfully.";
+                // Check if the connection string is set
+                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
+                {
+                    return "Connection string has not been set yet. " +
+                           "You have to create a database first. Use the Create Database component.";
+                }
+
+                if (recordKeys == null || recordKeys.Count == 0)
+                {
+                    return "Record keys (column names) are required.";
+                }
+
+                if (recordValues == null || recordValues.Count == 0)
+                {
+                    return "Record values are required.";
+                }
+
+                // Calculate the number of records
+                int numRecords = recordValues.Count / recordKeys.Count;
+
+                if (recordValues.Count % recordKeys.Count != 0)
+                {
+                    return "The number of record values must be a multiple of the number of record keys.";
+                }
+
+                // Build the list of records
+                var recordList = new List<Dictionary<string, object>>();
+
+                for (int i = 0; i < numRecords; i++)
+                {
+                    var record = new Dictionary<string, object>();
+                    for (int j = 0; j < recordKeys.Count; j++)
+                    {
+                        int valueIndex = i * recordKeys.Count + j;
+                        record.Add(recordKeys[j], recordValues[valueIndex]);
+                    }
+                    recordList.Add(record);
+                }
+
+                // Use the eventful GhClientApi to add records
+                string result = _eventfulGhClientApi.AddDictionaryRecordBatch(tableName, recordList);
+
+                return result;
             }
             catch (Exception ex)
             {
-                return $"Error adding record: {ex.Message}";
+                return $"Error adding records: {ex.Message}";
             }
         }
 
         /// <summary>
         /// Provides an Icon for the component.
         /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                //You can add image files to your project resources and access them like this:
-                // return Resources.IconForThisComponent;
-                return null;
-            }
-        }
+        protected override System.Drawing.Bitmap Icon => null; // Add an icon if available
 
         /// <summary>
         /// Gets the unique ID for this component. Do not change this ID after release.
         /// </summary>
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("42B2FCED-41F4-4112-B1FE-340A6ACA5775"); }
-        }
+        public override Guid ComponentGuid => new Guid("42B2FCED-41F4-4112-B1FE-340A6ACA5775");
     }
 }

@@ -10,17 +10,17 @@ namespace Daw.DB.GH
 {
     public class GhcCreateRecord : GH_Component
     {
-        private readonly IGhClientApi _ghClientApi;
         private readonly IEventfulGhClientApi _eventfulGhClientApi;
+        private readonly IDatabaseContext _databaseContext;
 
         public GhcCreateRecord()
-          : base("CreateRecord", "CR",
+          : base("Create Record", "CreateRec",
             "Creates a record and inserts it into the database",
             "Daw.DB", "CREATE")
         {
-            // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
-            _ghClientApi = ApiFactory.GetGhClientApi();
+            // Use the ApiFactory to get pre-configured instances
             _eventfulGhClientApi = ApiFactory.GetEventDrivenGhClientApi();
+            _databaseContext = ApiFactory.GetDatabaseContext();
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
@@ -61,27 +61,25 @@ namespace Daw.DB.GH
 
             try
             {
-
-                string connectionString = SQLiteConnectionFactory.ConnectionString;
-
-                if (string.IsNullOrWhiteSpace(connectionString))
+                // Check if the connection string is set
+                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
                 {
                     return "Connection string has not been set yet. " +
                            "You have to create a database first. Lay down a ConnectionString " +
-                           "component on the canvas, if a connection string is outputted";
+                           "component on the canvas.";
                 }
 
+                // Deserialize JSON strings to dictionaries
                 foreach (var json in jsonRecords)
                 {
-                    // Deserialize JSON string to dictionary
                     var record = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
                     records.Add(record);
                 }
 
-                _eventfulGhClientApi.AddDictionaryRecordBatch(tableName, records, connectionString);
+                // Use the eventful GhClientApi to add records
+                string result = _eventfulGhClientApi.AddDictionaryRecordBatch(tableName, records);
 
-
-                return "Record(s) added successfully.";
+                return result;
             }
             catch (Exception ex)
             {

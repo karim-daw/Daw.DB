@@ -11,15 +11,16 @@ namespace Daw.DB.GH
     public class GhcCreateDatabase : GH_Component
     {
         private readonly IGhClientApi _ghClientApi;
+        private readonly IDatabaseContext _databaseContext;
 
-        // TODO: update the component name and description and categories
         public GhcCreateDatabase()
-          : base("CreateDatabase", "CD",
-            "Creates and initializes a database",
-            "Daw.DB", "CREATE")
+            : base("Create Database", "CreateDB",
+                "Creates and initializes a database",
+                "Daw.DB", "CREATE")
         {
-            // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
+            // Use the ApiFactory to get pre-configured instances
             _ghClientApi = ApiFactory.GetGhClientApi();
+            _databaseContext = ApiFactory.GetDatabaseContext();
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
@@ -42,8 +43,7 @@ namespace Daw.DB.GH
             if (!DA.GetData(0, ref createDatabase)) return;
             if (!DA.GetData(1, ref databaseName)) return;
 
-            string databasePath = GetDatabasePath(databaseName);
-            if (string.IsNullOrWhiteSpace(databasePath))
+            if (string.IsNullOrWhiteSpace(databaseName))
             {
                 DA.SetData(0, "Database name is invalid.");
                 return;
@@ -51,7 +51,7 @@ namespace Daw.DB.GH
 
             if (createDatabase)
             {
-                string result = CreateAndInitializeDatabase(databasePath);
+                string result = CreateAndInitializeDatabase(databaseName);
 
                 // Output the result of the database operation
                 DA.SetData(0, result);
@@ -59,26 +59,32 @@ namespace Daw.DB.GH
         }
 
         // Wrapper method
-        private string CreateAndInitializeDatabase(string databasePath)
+        private string CreateAndInitializeDatabase(string databaseName)
         {
+            string databasePath = GetDatabasePath(databaseName);
+            if (string.IsNullOrWhiteSpace(databasePath))
+            {
+                return "Failed to get the database path.";
+            }
 
-            string connectionString = $"Data Source={databasePath};Version=3;";
-            SQLiteConnectionFactory.ConnectionString = connectionString;
-
+            // Set the connection string in the database context
+            _databaseContext.ConnectionString = $"Data Source={databasePath};Version=3;";
 
             try
             {
                 // Check if the database file already exists
                 if (File.Exists(databasePath))
                 {
-                    return $"Database already exists at {databasePath}, delete it if you want to overwrite the data";
+                    return $"Database already exists at {databasePath}. Delete it if you want to overwrite the data.";
                 }
 
+                // Use the GhClientApi to create the connection
+                string creationResult = _ghClientApi.CreateConnection();
 
-                _ghClientApi.CreateConnection(connectionString);
-
-                // save out the connection string for later use
-                // TODO: check why this isn't working
+                if (!creationResult.Contains("successfully"))
+                {
+                    return creationResult;
+                }
 
                 return $"Database created and initialized at {databasePath}";
             }

@@ -9,32 +9,30 @@ namespace Daw.DB.GH
 {
     public class GhcReadRecords : GH_Component
     {
-
         private readonly IGhClientApi _ghClientApi;
-
+        private readonly IDatabaseContext _databaseContext;
 
         public GhcReadRecords()
-          : base("ReadRecord", "RR",
-              "Read all records from the database given a table name",
+          : base("Read Records", "ReadRecs",
+              "Reads all records from the database given a table name",
             "Daw.DB", "READ")
         {
-            // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
+            // Use the ApiFactory to get pre-configured instances
             _ghClientApi = ApiFactory.GetGhClientApi();
+            _databaseContext = ApiFactory.GetDatabaseContext();
         }
-
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("TableName", "TN", "Name of the table to insert the record into", GH_ParamAccess.item);
+            pManager.AddTextParameter("TableName", "TN", "Name of the table to read records from", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Read", "R", "Boolean to trigger record read", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddTextParameter("Result", "R", "Result of the database operation", GH_ParamAccess.item);
-            pManager.AddTextParameter("Records", "R", "Records from the table", GH_ParamAccess.list);
+            pManager.AddTextParameter("Result", "Res", "Result of the database operation", GH_ParamAccess.item);
+            pManager.AddTextParameter("Records", "Recs", "Records from the table", GH_ParamAccess.list);
         }
-
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
@@ -44,40 +42,60 @@ namespace Daw.DB.GH
             if (!DA.GetData(0, ref tableName)) return;
             if (!DA.GetData(1, ref readRecord)) return;
 
-            // output all records from the table
+            // Output all records from the table
             List<string> records = new List<string>();
+            string resultMessage = string.Empty;
 
             if (readRecord)
             {
-                var resultBuilder = new System.Text.StringBuilder();
-                foreach (var record in ReadRecords(tableName))
+                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
                 {
-                    resultBuilder.AppendLine(record);
-                    records.Add(record);
+                    resultMessage = "Connection string has not been set yet. " +
+                                    "You have to create a database first. Use the Create Database component.";
+                    DA.SetData(0, resultMessage);
+                    return;
                 }
-                DA.SetData(0, resultBuilder.ToString());
+
+                try
+                {
+                    var resultBuilder = new System.Text.StringBuilder();
+                    foreach (var record in ReadRecords(tableName))
+                    {
+                        resultBuilder.AppendLine(record);
+                        records.Add(record);
+                    }
+                    resultMessage = "Records read successfully.";
+                }
+                catch (Exception ex)
+                {
+                    resultMessage = $"Error reading records: {ex.Message}";
+                }
+
+                DA.SetData(0, resultMessage);
+                DA.SetDataList(1, records);
             }
-
-            DA.SetDataList(1, records);
+            else
+            {
+                DA.SetData(0, "Waiting for read command...");
+                DA.SetDataList(1, records);
+            }
         }
-
 
         /// <summary>
         /// Read all records from the table with the given name.
-        /// This is a generator method that yields each record as a string.
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
         private IEnumerable<string> ReadRecords(string tableName)
         {
-            string connectionString = SQLiteConnectionFactory.ConnectionString;
-            IEnumerable<dynamic> records = _ghClientApi.GetAllDictionaryRecords(tableName, connectionString);
+            IEnumerable<dynamic> records = _ghClientApi.GetAllDictionaryRecords(tableName);
             foreach (var record in records)
             {
-                yield return Convert.ToString(record);
+                // Convert the record to JSON string for better readability
+                string jsonRecord = Newtonsoft.Json.JsonConvert.SerializeObject(record);
+                yield return jsonRecord;
             }
         }
-
 
         protected override System.Drawing.Bitmap Icon => null;
 

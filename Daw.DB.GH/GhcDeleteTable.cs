@@ -8,33 +8,29 @@ namespace Daw.DB.GH
 {
     public class GhcDeleteTable : GH_Component
     {
-
         private readonly IGhClientApi _ghClientApi;
+        private readonly IDatabaseContext _databaseContext;
 
         public GhcDeleteTable()
-          : base("DeleteTable", "DT",
-              "Deletes table from database given a table name",
+          : base("Delete Table", "DeleteTbl",
+              "Deletes a table from the database given a table name",
               "Daw.DB", "DELETE")
         {
             _ghClientApi = ApiFactory.GetGhClientApi();
+            _databaseContext = ApiFactory.GetDatabaseContext();
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("TableName", "TN", "Name of the table to delete", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("Delete", "D", "Boolean to trigger table delete", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Delete", "D", "Boolean to trigger table deletion", GH_ParamAccess.item);
         }
-
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("Result", "R", "Result of the database operation", GH_ParamAccess.item);
         }
 
-        /// <summary>
-        /// This is the method that actually does the work.
-        /// </summary>
-        /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             bool deleteTable = false;
@@ -52,19 +48,24 @@ namespace Daw.DB.GH
 
         private string DeleteTable(string tableName)
         {
-            string connectionString = SQLiteConnectionFactory.ConnectionString;
+            // Check if the connection string is set
+            if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
+            {
+                return "Connection string has not been set yet. " +
+                       "You have to create a database first. Use the Create Database component.";
+            }
 
-            // print in console
+            // Print to console (optional)
             Console.WriteLine($"Deleting table {tableName}");
 
             try
             {
-                _ghClientApi.DeleteTable(tableName, connectionString);
-                return $"Table {tableName} deleted successfully";
+                string result = _ghClientApi.DeleteTable(tableName);
+                return result;
             }
             catch (Exception e)
             {
-                return $"Error deleting table {tableName}: {e.Message}";
+                return $"Error deleting table '{tableName}': {e.Message}";
             }
         }
 
