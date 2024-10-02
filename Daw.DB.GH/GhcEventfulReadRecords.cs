@@ -10,19 +10,18 @@ namespace Daw.DB.GH
     public class GhcEventfulReadRecords : GH_Component
     {
         private readonly IEventfulGhClientApi _eventDrivenGhClientApi;
-        private readonly IDatabaseContext _databaseContext;
+        private readonly IDatabaseContext _dataBaseContext;
         private bool _eventTriggered;
-        private bool _isSubscribed;
+
 
         public GhcEventfulReadRecords()
-          : base("Read Records With Events", "RRWE",
-              "Reads all records from the database given a table name, and automatically updates when the table changes if live listening is enabled",
+          : base("ReadRecordWithEvents", "RRW",
+              "Read all records from the database given a table name, and automatically updates when the table changes if live listening is enabled",
               "Daw.DB", "READ")
         {
             _eventDrivenGhClientApi = ApiFactory.GetEventDrivenGhClientApi();
-            _databaseContext = ApiFactory.GetDatabaseContext();
+            _dataBaseContext = ApiFactory.GetDatabaseContext();
             _eventTriggered = false;
-            _isSubscribed = false;
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
@@ -34,8 +33,8 @@ namespace Daw.DB.GH
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddTextParameter("Result", "Res", "Result of the database operation", GH_ParamAccess.item);
-            pManager.AddTextParameter("Records", "Rec", "Records from the table", GH_ParamAccess.list);
+            pManager.AddTextParameter("Keys", "K", "Keys from the table", GH_ParamAccess.list);
+            pManager.AddTextParameter("Values", "V", "Values from the table", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -44,136 +43,136 @@ namespace Daw.DB.GH
             string tableName = null;
             bool liveListen = false;
 
+            // Get input data
             if (!DA.GetData(0, ref tableName)) return;
             if (!DA.GetData(1, ref readRecord)) return;
             if (!DA.GetData(2, ref liveListen)) return;
 
-            if (string.IsNullOrWhiteSpace(tableName))
+            // Manage live listening
+            if (liveListen)
             {
-                DA.SetData(0, "Table name is invalid.");
-                return;
-            }
-
-            if (liveListen && !_isSubscribed)
-            {
-                SubscribeToTableChanges();
-                _isSubscribed = true;
-            }
-            else if (!liveListen && _isSubscribed)
-            {
-                UnsubscribeFromTableChanges();
-                _isSubscribed = false;
-            }
-
-            // Output all records from the table
-            List<string> records = new List<string>();
-            string resultMessage = string.Empty;
-
-            if (readRecord || _eventTriggered)
-            {
-                _eventTriggered = false; // Reset event flag
-
-                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
-                {
-                    resultMessage = "Connection string has not been set yet. " +
-                                    "You have to create a database first. Use the Create Database component.";
-                    DA.SetData(0, resultMessage);
-                    return;
-                }
-
-                try
-                {
-                    IEnumerable<string> recordsEnumerable = ReadRecords(tableName);
-                    records.AddRange(recordsEnumerable);
-                    resultMessage = "Records read successfully.";
-                }
-                catch (Exception ex)
-                {
-                    resultMessage = $"Error reading records: {ex.Message}";
-                }
-
-                DA.SetData(0, resultMessage);
-                DA.SetDataList(1, records);
+                UnsubscribeFromTableChanges(tableName);
+                SubscribeToTableChanges(tableName);
             }
             else
             {
-                DA.SetData(0, "Waiting for read command or table changes...");
-                DA.SetDataList(1, records);
+                UnsubscribeFromTableChanges(tableName);
             }
-        }
 
-        /// <summary>
-        /// Subscribe to table changes using the IEventfulGhClientApi methods.
-        /// </summary>
-        private void SubscribeToTableChanges()
-        {
-            _eventDrivenGhClientApi.SubscribeToTableChanges(OnTableChanged);
-        }
+            List<Grasshopper.Kernel.Types.GH_String> allKeys = new List<Grasshopper.Kernel.Types.GH_String>();
+            List<object> allValues = new List<object>();
 
-        /// <summary>
-        /// Unsubscribe from table changes using the IEventfulGhClientApi methods.
-        /// </summary>
-        private void UnsubscribeFromTableChanges()
-        {
-            _eventDrivenGhClientApi.UnsubscribeFromTableChanges(OnTableChanged);
-        }
-
-        private void OnTableChanged(object sender, TableChangedEventArgs args)
-        {
-            // Check if the table name matches
-            string currentTableName = GetCurrentTableName();
-            if (args.TableName == null || args.TableName != currentTableName)
+            // Always read records when "Read" is true
+            if (readRecord)
             {
-                return;
+                _eventTriggered = false; // Reset event flag (because we're manually reading)
+                foreach (var record in ReadRecords(tableName))
+                {
+                    // Convert the DapperRow record to separate key and value lists
+                    List<Grasshopper.Kernel.Types.GH_String> keys;
+                    List<object> values;
+                    ConvertRecordToKeyValueLists(record, out keys, out values);
+
+                    // Add the keys and values to the full lists to be outputted
+                    allKeys.AddRange(keys);
+                    allValues.AddRange(values);
+                }
             }
 
-            _eventTriggered = true;
-            ExpireSolution(true); // Trigger Grasshopper to re-solve the component
+            // Output the keys and values to Grasshopper
+            DA.SetDataList(0, allKeys);   // Output the keys (column names)
+            DA.SetDataList(1, allValues); // Output the values (data)
+        }
+
+
+
+        /// <summary>
+        /// Subscribe to table changes and trigger component update.
+        /// </summary>
+        /// <param name="tableName"></param>
+        private void SubscribeToTableChanges(string tableName)
+        {
+            _eventDrivenGhClientApi.SubscribeToTableChanges((sender, args) =>
+            {
+                if (args.TableName == tableName)
+                {
+                    _eventTriggered = true;
+                    ExpireSolution(true); // Trigger Grasshopper to re-solve the component
+                }
+            });
         }
 
         /// <summary>
-        /// Gets the current table name from the input parameter.
+        /// Unsubscribe from table changes.
         /// </summary>
-        /// <returns></returns>
-        private string GetCurrentTableName()
+        /// <param name="tableName"></param>
+        private void UnsubscribeFromTableChanges(string tableName)
         {
-            string tableName = null;
-            if (!Params.Input[0].VolatileData.IsEmpty)
+            _eventDrivenGhClientApi.UnsubscribeFromTableChanges((sender, args) =>
             {
-                tableName = Params.Input[0].VolatileData.get_Branch(0)[0] as string;
-            }
-            return tableName;
+                if (args.TableName == tableName)
+                {
+                    _eventTriggered = false;
+                }
+            });
         }
+
 
         /// <summary>
         /// Read all records from the table with the given name.
+        /// This is a generator method that yields each record as a string.
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
-        private IEnumerable<string> ReadRecords(string tableName)
+        private IEnumerable<dynamic> ReadRecords(string tableName)
         {
             IEnumerable<dynamic> records = _eventDrivenGhClientApi.GetAllDictionaryRecords(tableName);
             foreach (var record in records)
             {
-                // Convert the record to JSON string for better readability
-                string jsonRecord = Newtonsoft.Json.JsonConvert.SerializeObject(record);
-                yield return jsonRecord;
+                yield return record;
             }
         }
 
-        protected override void BeforeSolveInstance()
+        /// <summary>
+        /// Converts the dynamic record into a formatted string for easy viewing in Grasshopper.
+        /// </summary>
+        private string ConvertRecordToString(dynamic record)
         {
-            _eventTriggered = false; // Reset event flag before each solution
+            return record.ToString(); // Customize this based on your record format, can use string interpolation.
         }
 
-        //protected override void ExpireDownStreamObjects()
-        //{
-        //    // Override this method to prevent automatic expiration of downstream objects
-        //    // when the component expires due to event triggering
-        //}
+        /// <summary>
+        /// Converts dynamic DapperRow objects to two separate lists: one for keys and one for values.
+        /// </summary>
+        private void ConvertRecordToKeyValueLists(dynamic record, out List<Grasshopper.Kernel.Types.GH_String> keys, out List<object> values)
+        {
+            keys = new List<Grasshopper.Kernel.Types.GH_String>();
+            values = new List<object>();
+
+            // Use reflection to access properties of the DapperRow
+            var recordProperties = record.GetType().GetProperties();
+
+            foreach (var prop in recordProperties)
+            {
+                // Add the key (property name) to the keys list
+                var propName = prop.Name;
+                keys.Add(new Grasshopper.Kernel.Types.GH_String(propName));
+
+                // Convert the value to Grasshopper-compatible types and add to the values list
+                var propValue = prop.GetValue(record);
+                if (propValue is int)
+                    values.Add(new Grasshopper.Kernel.Types.GH_Integer((int)propValue));
+                else if (propValue is double)
+                    values.Add(new Grasshopper.Kernel.Types.GH_Number((double)propValue));
+                else if (propValue is string)
+                    values.Add(new Grasshopper.Kernel.Types.GH_String((string)propValue));
+                else
+                    values.Add(new Grasshopper.Kernel.Types.GH_ObjectWrapper(propValue)); // Default for other types
+            }
+        }
+
 
         protected override System.Drawing.Bitmap Icon => null;
-
         public override Guid ComponentGuid => new Guid("C53B71A4-2B1B-4C50-9ED6-34975CA6B5D7");
     }
 }
