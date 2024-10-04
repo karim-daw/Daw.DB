@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Daw.DB.Data.Services
 {
@@ -36,27 +37,11 @@ namespace Daw.DB.Data.Services
 
         public string BuildInsertQuery(string tableName, Dictionary<string, object> record)
         {
-            // get column names and values from record
-            var columns = string.Join(BuildGetColumnNamesQuery(tableName), record.Keys);
-
-
+            // Get column names and values from record
+            var columns = string.Join(", ", record.Keys);
             var values = string.Join(", ", record.Keys.Select(k => $"@{k}"));
             return $"INSERT INTO {tableName} ({columns}) VALUES ({values})";
         }
-
-        // get table column names from table name
-        private string BuildGetColumnNamesQuery(string tableName)
-        {
-            // create column names query
-            return $"PRAGMA table_info({tableName})";
-        }
-
-        // Example record structure:
-        // [
-        //     { "Name": "Building 1", "Height": 100, "Floors": 10, "Location": "London" },
-        //     { "Name": "Building 2", "Height": 200, "Floors": 20, "Location": "Paris" },
-        //     { "Name": "Building 3", "Height": 300, "Floors": 30, "Location": "Berlin" }
-        // ]
 
         public (string query, Dictionary<string, object> parameters) BuildBatchInsertQuery(string tableName, IEnumerable<Dictionary<string, object>> records, int batchSize = 1000)
         {
@@ -66,55 +51,67 @@ namespace Daw.DB.Data.Services
             // Extract column names from the first record
             var columns = string.Join(", ", records.First().Keys);
 
-            // Initialize a list to hold the batch insert queries
-            var queries = new List<string>();
-
-            // Initialize a dictionary to hold all the parameters
+            // Use StringBuilder to efficiently construct the final query
+            var queryBuilder = new StringBuilder();
             var parameters = new Dictionary<string, object>();
 
-            // Group records into batches based on the specified batch size
-            foreach (var batch in records.Select((record, index) => new { record, index })
-                                         .GroupBy(x => x.index / batchSize))
+            // Use a Queue for efficient batch processing
+            var currentBatch = new Queue<string>();
+            int batchCounter = 0;
+            int recordIndex = 0;
+
+            foreach (var record in records)
             {
-                // For each batch, create a group of values for the insert statement
-                var valueGroups = batch.Select(x =>
+                // Create value placeholders for the current record
+                var values = string.Join(", ", record.Keys.Select(k => $"@{k}{recordIndex}"));
+                currentBatch.Enqueue($"({values})");
+
+                // Add the actual values to the parameters dictionary
+                foreach (var kvp in record)
                 {
-                    // Create a list of placeholders for the values in the current record
-                    var values = string.Join(", ", x.record.Keys.Select(k => $"@{k}{x.index}"));
+                    parameters[$"{kvp.Key}{recordIndex}"] = kvp.Value;
+                }
 
-                    // Add the actual values to the parameters dictionary
-                    foreach (var kvp in x.record)
-                    {
-                        // this will create a unique key for each parameter
-                        // e.g. for the first record, the key will be "Name0", "Height0", "Floors0", "Location0"
-                        parameters.Add($"{kvp.Key}{x.index}", kvp.Value);
-                    }
+                recordIndex++;
+                batchCounter++;
 
-                    return $"({values})";
-                });
-
-                // Combine the value groups into a single values clause
-                var valuesClause = string.Join(", ", valueGroups);
-
-                // Construct the full insert query for this batch
-                queries.Add($"INSERT INTO {tableName} ({columns}) VALUES {valuesClause}");
+                // If batch size is reached, append the batch insert statement
+                if (batchCounter == batchSize)
+                {
+                    queryBuilder.Append($"INSERT INTO {tableName} ({columns}) VALUES {string.Join(", ", currentBatch)};");
+                    currentBatch.Clear();
+                    batchCounter = 0;
+                }
             }
 
-            // Combine all batch queries into one string, separated by semicolons
-            var finalQuery = string.Join("; ", queries);
+            // Append any remaining records in the last batch
+            if (currentBatch.Any())
+            {
+                queryBuilder.Append($"INSERT INTO {tableName} ({columns}) VALUES {string.Join(", ", currentBatch)};");
+            }
 
-            return (finalQuery, parameters);
+            return (queryBuilder.ToString(), parameters);
         }
-
 
         public string BuildUpdateQuery(string tableName, Dictionary<string, object> updatedValues)
         {
+            if (tableName == null)
+                throw new ArgumentNullException(nameof(tableName));
+
+
+            if (updatedValues == null || !updatedValues.Any())
+                throw new ArgumentException("Updated values collection cannot be empty.");
+
+
             var setClause = string.Join(", ", updatedValues.Keys.Select(k => $"{k} = @{k}"));
             return $"UPDATE {tableName} SET {setClause} WHERE {DefaultIdColumn} = @{DefaultIdColumn}";
         }
 
         public string BuildSelectQuery(string tableName, string whereClause = null)
         {
+            if (tableName == null)
+                throw new ArgumentNullException(nameof(tableName));
+
             return whereClause == null
                 ? $"SELECT * FROM {tableName}"
                 : $"SELECT * FROM {tableName} WHERE {whereClause}";
@@ -122,14 +119,19 @@ namespace Daw.DB.Data.Services
 
         public string BuildDeleteQuery(string tableName)
         {
+            if (tableName == null)
+                throw new ArgumentNullException(nameof(tableName));
+
+            if (tableName.Equals(string.Empty))
+                throw new ArgumentException(nameof(tableName));
+
             return $"DELETE FROM {tableName} WHERE {DefaultIdColumn} = @{DefaultIdColumn}";
         }
 
         private Dictionary<string, string> InjectIdColumn(Dictionary<string, string> columns)
         {
-            Dictionary<string, string> columnsCopy = new Dictionary<string, string>(columns);
-
-            // create copy of columns dictionary quickly
+            // Create a copy of columns dictionary quickly
+            var columnsCopy = new Dictionary<string, string>(columns);
 
             if (!columnsCopy.ContainsKey(DefaultIdColumn))
             {
@@ -142,7 +144,6 @@ namespace Daw.DB.Data.Services
         public string BuildDeleteTableQuery(string tableName)
         {
             return $"DROP TABLE IF EXISTS {tableName}";
-
         }
 
         public string BuildGetAllTableNamesQuery()
