@@ -4,6 +4,7 @@ using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Daw.DB.GH
 {
@@ -92,7 +93,7 @@ namespace Daw.DB.GH
             foreach (var record in records)
             {
                 // Convert the record to JSON string for better readability
-                string jsonRecord = Newtonsoft.Json.JsonConvert.SerializeObject(record);
+                string jsonRecord = JsonSerializer.Serialize(record);
                 yield return jsonRecord;
             }
         }

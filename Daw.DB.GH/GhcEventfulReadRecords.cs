@@ -4,6 +4,7 @@ using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Daw.DB.GH
 {
@@ -12,7 +13,6 @@ namespace Daw.DB.GH
         private readonly IEventfulGhClientApi _eventDrivenGhClientApi;
         private readonly IDatabaseContext _dataBaseContext;
         private bool _eventTriggered;
-
 
         public GhcEventfulReadRecords()
           : base("ReadRecordWithEvents", "RRW",
@@ -33,8 +33,7 @@ namespace Daw.DB.GH
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddTextParameter("Keys", "K", "Keys from the table", GH_ParamAccess.list);
-            pManager.AddTextParameter("Values", "V", "Values from the table", GH_ParamAccess.list);
+            pManager.AddTextParameter("Records", "R", "List of JSON formatted records from the table", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -59,32 +58,22 @@ namespace Daw.DB.GH
                 UnsubscribeFromTableChanges(tableName);
             }
 
-            List<Grasshopper.Kernel.Types.GH_String> allKeys = new List<Grasshopper.Kernel.Types.GH_String>();
-            List<object> allValues = new List<object>();
-
-            // Always read records when "Read" is true
             if (readRecord)
             {
                 _eventTriggered = false; // Reset event flag (because we're manually reading)
+                var jsonRecordsList = new List<string>();
+
                 foreach (var record in ReadRecords(tableName))
                 {
-                    // Convert the DapperRow record to separate key and value lists
-                    List<Grasshopper.Kernel.Types.GH_String> keys;
-                    List<object> values;
-                    ConvertRecordToKeyValueLists(record, out keys, out values);
-
-                    // Add the keys and values to the full lists to be outputted
-                    allKeys.AddRange(keys);
-                    allValues.AddRange(values);
+                    var recordDict = ConvertRecordToDictionary(record);
+                    string jsonRecord = JsonSerializer.Serialize(recordDict);
+                    jsonRecordsList.Add(jsonRecord);
                 }
+
+                // Output the list of JSON records to Grasshopper
+                DA.SetDataList(0, jsonRecordsList);
             }
-
-            // Output the keys and values to Grasshopper
-            DA.SetDataList(0, allKeys);   // Output the keys (column names)
-            DA.SetDataList(1, allValues); // Output the values (data)
         }
-
-
 
         /// <summary>
         /// Subscribe to table changes and trigger component update.
@@ -117,10 +106,8 @@ namespace Daw.DB.GH
             });
         }
 
-
         /// <summary>
         /// Read all records from the table with the given name.
-        /// This is a generator method that yields each record as a string.
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
@@ -134,43 +121,23 @@ namespace Daw.DB.GH
         }
 
         /// <summary>
-        /// Converts the dynamic record into a formatted string for easy viewing in Grasshopper.
+        /// Converts dynamic DapperRow objects to a dictionary of keys and values.
         /// </summary>
-        private string ConvertRecordToString(dynamic record)
+        private Dictionary<string, object> ConvertRecordToDictionary(dynamic record)
         {
-            return record.ToString(); // Customize this based on your record format, can use string interpolation.
-        }
+            var recordDict = new Dictionary<string, object>();
 
-        /// <summary>
-        /// Converts dynamic DapperRow objects to two separate lists: one for keys and one for values.
-        /// </summary>
-        private void ConvertRecordToKeyValueLists(dynamic record, out List<Grasshopper.Kernel.Types.GH_String> keys, out List<object> values)
-        {
-            keys = new List<Grasshopper.Kernel.Types.GH_String>();
-            values = new List<object>();
-
-            // Use reflection to access properties of the DapperRow
-            var recordProperties = record.GetType().GetProperties();
-
-            foreach (var prop in recordProperties)
+            // Cast the dynamic record to IDictionary to access keys and values
+            if (record is IDictionary<string, object> dict)
             {
-                // Add the key (property name) to the keys list
-                var propName = prop.Name;
-                keys.Add(new Grasshopper.Kernel.Types.GH_String(propName));
-
-                // Convert the value to Grasshopper-compatible types and add to the values list
-                var propValue = prop.GetValue(record);
-                if (propValue is int)
-                    values.Add(new Grasshopper.Kernel.Types.GH_Integer((int)propValue));
-                else if (propValue is double)
-                    values.Add(new Grasshopper.Kernel.Types.GH_Number((double)propValue));
-                else if (propValue is string)
-                    values.Add(new Grasshopper.Kernel.Types.GH_String((string)propValue));
-                else
-                    values.Add(new Grasshopper.Kernel.Types.GH_ObjectWrapper(propValue)); // Default for other types
+                foreach (var kvp in dict)
+                {
+                    recordDict[kvp.Key] = kvp.Value;
+                }
             }
-        }
 
+            return recordDict;
+        }
 
         protected override System.Drawing.Bitmap Icon => null;
         public override Guid ComponentGuid => new Guid("C53B71A4-2B1B-4C50-9ED6-34975CA6B5D7");
