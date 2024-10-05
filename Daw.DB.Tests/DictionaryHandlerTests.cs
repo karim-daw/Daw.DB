@@ -14,24 +14,29 @@ namespace Daw.DB.Tests
     public class DictionaryHandlerTests
     {
         private IDictionaryHandler _dictionaryHandler;
+        private IDatabaseContext _databaseContext;
         private string _databaseFilePath;
-        private string _connectionString;
 
         [TestInitialize]
         public void Setup()
         {
-            // Configure the DI container and resolve the DictionaryHandler
             // Load configuration from appsettings.json
             var configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                // Adjust the base path as needed
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .Build();
 
             // Configure services based on the loaded configuration
             var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
             _dictionaryHandler = serviceProvider.GetRequiredService<IDictionaryHandler>();
+            _databaseContext = serviceProvider.GetRequiredService<IDatabaseContext>();
 
-            _databaseFilePath = Path.GetTempFileName();
-            _connectionString = $"Data Source={_databaseFilePath};Version=3;";
+            // Set up a temporary database file path
+            _databaseFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
+
+            // Set the connection string in the database context
+            _databaseContext.ConnectionString = $"Data Source={_databaseFilePath};Version=3;";
         }
 
         [TestCleanup]
@@ -65,10 +70,10 @@ namespace Daw.DB.Tests
             };
 
             // Act
-            _dictionaryHandler.CreateTable(tableName, columns, _connectionString);
+            _dictionaryHandler.CreateTable(tableName, columns);
 
             // Assert
-            using (var connection = new SQLiteConnection(_connectionString))
+            using (var connection = new SQLiteConnection(_databaseContext.ConnectionString))
             {
                 connection.Open();
                 var query = $"PRAGMA table_info({tableName})";
@@ -92,10 +97,10 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _dictionaryHandler.CreateTable(tableName, columns, _connectionString);
+            _dictionaryHandler.CreateTable(tableName, columns);
 
             // Act
-            _dictionaryHandler.CreateTable(tableName, columns, _connectionString);
+            _dictionaryHandler.CreateTable(tableName, columns);
 
             // Assert: Expecting exception
         }
@@ -110,7 +115,7 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _dictionaryHandler.CreateTable(tableName, columns, _connectionString);
+            _dictionaryHandler.CreateTable(tableName, columns);
 
             var record = new Dictionary<string, object>
             {
@@ -118,10 +123,10 @@ namespace Daw.DB.Tests
             };
 
             // Act
-            _dictionaryHandler.AddRecord(tableName, record, _connectionString);
+            _dictionaryHandler.AddRecord(tableName, record);
 
             // Assert
-            var records = _dictionaryHandler.GetAllRecords(tableName, _connectionString).ToList();
+            var records = _dictionaryHandler.GetAllRecords(tableName).ToList();
             Assert.AreEqual(1, records.Count);
             Assert.AreEqual("TestName", records.First().Name);
         }
@@ -136,17 +141,17 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _dictionaryHandler.CreateTable(tableName, columns, _connectionString);
+            _dictionaryHandler.CreateTable(tableName, columns);
 
             var record = new Dictionary<string, object>
             {
                 { "Name", "TestName" }
             };
 
-            _dictionaryHandler.AddRecord(tableName, record, _connectionString);
+            _dictionaryHandler.AddRecord(tableName, record);
 
             // Act
-            var retrievedRecord = _dictionaryHandler.GetRecordById(tableName, 1, _connectionString);
+            var retrievedRecord = _dictionaryHandler.GetRecordById(tableName, 1);
 
             // Assert
             Assert.IsNotNull(retrievedRecord);
@@ -163,14 +168,14 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _dictionaryHandler.CreateTable(tableName, columns, _connectionString);
+            _dictionaryHandler.CreateTable(tableName, columns);
 
             var record = new Dictionary<string, object>
             {
                 { "Name", "TestName" }
             };
 
-            _dictionaryHandler.AddRecord(tableName, record, _connectionString);
+            _dictionaryHandler.AddRecord(tableName, record);
 
             var updatedValues = new Dictionary<string, object>
             {
@@ -178,10 +183,10 @@ namespace Daw.DB.Tests
             };
 
             // Act
-            _dictionaryHandler.UpdateRecord(tableName, 1, updatedValues, _connectionString);
+            _dictionaryHandler.UpdateRecord(tableName, 1, updatedValues);
 
             // Assert
-            var retrievedRecord = _dictionaryHandler.GetRecordById(tableName, 1, _connectionString);
+            var retrievedRecord = _dictionaryHandler.GetRecordById(tableName, 1);
             Assert.IsNotNull(retrievedRecord);
             Assert.AreEqual("UpdatedName", retrievedRecord.Name);
         }
@@ -196,22 +201,21 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _dictionaryHandler.CreateTable(tableName, columns, _connectionString);
+            _dictionaryHandler.CreateTable(tableName, columns);
 
             var record = new Dictionary<string, object>
             {
                 { "Name", "TestName" }
             };
 
-            _dictionaryHandler.AddRecord(tableName, record, _connectionString);
+            _dictionaryHandler.AddRecord(tableName, record);
 
             // Act
-            _dictionaryHandler.DeleteRecord(tableName, 1, _connectionString);
+            _dictionaryHandler.DeleteRecord(tableName, 1);
 
             // Assert
-            var retrievedRecord = _dictionaryHandler.GetRecordById(tableName, 1, _connectionString);
+            var retrievedRecord = _dictionaryHandler.GetRecordById(tableName, 1);
             Assert.IsNull(retrievedRecord);
         }
     }
-
 }

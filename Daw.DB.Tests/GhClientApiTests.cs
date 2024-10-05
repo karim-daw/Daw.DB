@@ -1,4 +1,5 @@
 ﻿using Daw.DB.Data.APIs;
+using Daw.DB.Data.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -13,26 +14,30 @@ namespace Daw.DB.Tests
     public class GhClientApiTests
     {
         private IGhClientApi _ghClientApi;
+        private IDatabaseContext _databaseContext;
         private string _databaseFilePath;
-        private string _connectionString;
 
         [TestInitialize]
         public void Setup()
         {
             // Load configuration from appsettings.json
             var configuration = new ConfigurationBuilder()
-                // make sure to geT appsettings.json from the correct path which is in root folder
+                // Adjust the base path as needed
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .Build();
 
             // Configure services based on the loaded configuration
             var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
 
             _ghClientApi = serviceProvider.GetRequiredService<IGhClientApi>();
+            _databaseContext = serviceProvider.GetRequiredService<IDatabaseContext>();
 
-            _databaseFilePath = Path.GetTempFileName();
-            _connectionString = $"Data Source={_databaseFilePath};Version=3;";
+            // Set up a temporary database file path
+            _databaseFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
+
+            // Set the connection string in the database context
+            _databaseContext.ConnectionString = $"Data Source={_databaseFilePath};Version=3;";
         }
 
         [TestCleanup]
@@ -55,7 +60,6 @@ namespace Daw.DB.Tests
             }
         }
 
-        //Test delete table
         [TestMethod]
         public void DeleteTable_ShouldDeleteTableSuccessfully()
         {
@@ -66,19 +70,17 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName, columns);
 
             // Act
-            _ghClientApi.DeleteTable(tableName, _connectionString);
+            _ghClientApi.DeleteTable(tableName);
 
             // Assert
-            // check all table names and see if the table is deleted
-            var allTableNames = _ghClientApi.GetTables(_connectionString);
+            var allTableNames = _ghClientApi.GetTables();
             var tableExists = allTableNames.Contains(tableName);
             Assert.IsFalse(tableExists, "Table was not deleted successfully.");
         }
 
-        [ExpectedException(typeof(Exception))]
         [TestMethod]
         public void DeleteTable_ShouldThrowExceptionWhenTableDoesNotExist()
         {
@@ -86,10 +88,14 @@ namespace Daw.DB.Tests
             string tableName = "NonExistingTable";
 
             // Act
-            _ghClientApi.DeleteTable(tableName, _connectionString);
+            var result = _ghClientApi.DeleteTable(tableName);
+
+            // Assert: Exception is expected
+            // Error deleting table 'NonExistingTable': Table does not exist.
+            Assert.IsTrue(result.Contains("Error deleting table"), "Exception message is incorrect.");
+
         }
 
-        // more tests for delete table
         [TestMethod]
         public void DeleteTable_ShouldDeleteWithManyTables()
         {
@@ -102,20 +108,19 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _ghClientApi.CreateTable(tableName1, columns, _connectionString);
-            _ghClientApi.CreateTable(tableName2, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName1, columns);
+            _ghClientApi.CreateTable(tableName2, columns);
 
             // Act
-            _ghClientApi.DeleteTable(tableName1, _connectionString);
+            _ghClientApi.DeleteTable(tableName1);
 
             // Assert
-            var allTableNames = _ghClientApi.GetTables(_connectionString);
+            var allTableNames = _ghClientApi.GetTables();
             var tableExists = allTableNames.Contains(tableName1);
             Assert.IsFalse(tableExists, "Table was not deleted successfully.");
 
             var otherTableExists = allTableNames.Contains(tableName2);
             Assert.IsTrue(otherTableExists, "Other table was deleted.");
-
         }
 
         [TestMethod]
@@ -128,7 +133,7 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName, columns);
 
             var record = new Dictionary<string, object>
             {
@@ -136,19 +141,15 @@ namespace Daw.DB.Tests
             };
 
             // Act
-            _ghClientApi.AddDictionaryRecord(tableName, record, _connectionString);
+            _ghClientApi.AddDictionaryRecord(tableName, record);
 
             // Assert
-            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName, _connectionString);
+            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName);
             Assert.AreEqual(1, allRecords.Count(), "Record was not added successfully.");
 
-            // use select in assert to get the record
             Assert.AreEqual("TestName", allRecords.Select(x => x.Name).First(), "Record was not added with the correct value.");
-
         }
 
-
-        // add test for adding record batch with only one record
         [TestMethod]
         public void AddDictionaryRecordSingle_ShouldAddRecord()
         {
@@ -159,27 +160,20 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName, columns);
 
-            var records = new[]
-            {
-                new Dictionary<string, object> { { "Name", "Record1" } }
-            };
+            var record = new Dictionary<string, object> { { "Name", "Record1" } };
 
             // Act
-            _ghClientApi.AddDictionaryRecord(tableName, records[0], _connectionString);
+            _ghClientApi.AddDictionaryRecord(tableName, record);
 
             // Assert
-            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName, _connectionString);
+            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName);
             Assert.AreEqual(1, allRecords.Count(), "Record was not added successfully.");
 
-            // use select in assert to get the record
             Assert.AreEqual("Record1", allRecords.Select(x => x.Name).First(), "Record was not added with the correct value.");
-
         }
 
-
-        // test adding batch records
         [TestMethod]
         public void AddDictionaryRecordBatch_ShouldAddRecordsSuccessfully()
         {
@@ -190,7 +184,7 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName, columns);
 
             var records = new[]
             {
@@ -199,13 +193,12 @@ namespace Daw.DB.Tests
             };
 
             // Act
-            _ghClientApi.AddDictionaryRecordBatch(tableName, records, _connectionString);
+            _ghClientApi.AddDictionaryRecordBatch(tableName, records);
 
             // Assert
-            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName, _connectionString);
+            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName);
             Assert.AreEqual(2, allRecords.Count(), "Records were not added successfully.");
 
-            // use select in assert to get the record
             Assert.AreEqual("Record1", allRecords.Select(x => x.Name).First(), "First record was not added with the correct value.");
             Assert.AreEqual("Record2", allRecords.Select(x => x.Name).Last(), "Second record was not added with the correct value.");
         }
@@ -220,14 +213,14 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName, columns);
 
             var record = new Dictionary<string, object>
             {
                 { "Name", "TestName" }
             };
 
-            _ghClientApi.AddDictionaryRecord(tableName, record, _connectionString);
+            _ghClientApi.AddDictionaryRecord(tableName, record);
 
             var updatedValues = new Dictionary<string, object>
             {
@@ -235,10 +228,10 @@ namespace Daw.DB.Tests
             };
 
             // Act
-            _ghClientApi.UpdateDictionaryRecord(tableName, 1, updatedValues, _connectionString);
+            _ghClientApi.UpdateDictionaryRecord(tableName, 1, updatedValues);
 
             // Assert
-            var updatedRecord = _ghClientApi.GetDictionaryRecordById(tableName, 1, _connectionString);
+            var updatedRecord = _ghClientApi.GetDictionaryRecordById(tableName, 1);
             Assert.AreEqual("UpdatedName", updatedRecord.Name, "Record was not updated successfully.");
         }
 
@@ -252,20 +245,20 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName, columns);
 
             var record = new Dictionary<string, object>
             {
                 { "Name", "TestName" }
             };
 
-            _ghClientApi.AddDictionaryRecord(tableName, record, _connectionString);
+            _ghClientApi.AddDictionaryRecord(tableName, record);
 
             // Act
-            _ghClientApi.DeleteRecord(tableName, 1, _connectionString);
+            _ghClientApi.DeleteRecord(tableName, 1);
 
             // Assert
-            var deletedRecord = _ghClientApi.GetDictionaryRecordById(tableName, 1, _connectionString);
+            var deletedRecord = _ghClientApi.GetDictionaryRecordById(tableName, 1);
             Assert.IsNull(deletedRecord, "Record was not deleted successfully.");
         }
 
@@ -279,7 +272,7 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName, columns);
 
             var record = new Dictionary<string, object>
             {
@@ -292,12 +285,12 @@ namespace Daw.DB.Tests
             };
 
             // Act
-            _ghClientApi.AddDictionaryRecord(tableName, record, _connectionString);
-            _ghClientApi.UpdateDictionaryRecord(tableName, 1, updatedValues, _connectionString);
-            _ghClientApi.DeleteRecord(tableName, 1, _connectionString);
+            _ghClientApi.AddDictionaryRecord(tableName, record);
+            _ghClientApi.UpdateDictionaryRecord(tableName, 1, updatedValues);
+            _ghClientApi.DeleteRecord(tableName, 1);
 
             // Assert
-            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName, _connectionString);
+            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName);
             Assert.AreEqual(0, allRecords.Count(), "Multiple operations were not handled correctly.");
         }
 
@@ -311,7 +304,7 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName, columns);
 
             var records = new[]
             {
@@ -320,18 +313,14 @@ namespace Daw.DB.Tests
             };
 
             // Act
-            _ghClientApi.AddDictionaryRecordInTransaction(tableName, records, _connectionString);
+            _ghClientApi.AddDictionaryRecordInTransaction(tableName, records);
 
             // Assert
-            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName, _connectionString);
+            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName);
             Assert.AreEqual(2, allRecords.Count(), "Records were not added successfully in transaction.");
 
-            // use select in assert to get the record
             Assert.AreEqual("Record1", allRecords.Select(x => x.Name).First(), "First record was not added with the correct value.");
             Assert.AreEqual("Record2", allRecords.Select(x => x.Name).Last(), "Second record was not added with the correct value.");
-
-            // Assert.AreEqual("Record1", allRecords[0].Name, "First record was not added with the correct value.");
-            // Assert.AreEqual("Record2", allRecords[1].Name, "Second record was not added with the correct value.");
         }
 
         [TestMethod]
@@ -344,18 +333,18 @@ namespace Daw.DB.Tests
                 { "Name", "TEXT" }
             };
 
-            _ghClientApi.CreateTable(tableName, columns, _connectionString);
+            _ghClientApi.CreateTable(tableName, columns);
 
             var record = new Dictionary<string, object>
             {
                 { "Name", "TestName" }
             };
 
-            _ghClientApi.AddDictionaryRecord(tableName, record, _connectionString);
+            _ghClientApi.AddDictionaryRecord(tableName, record);
 
             // Act
-            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName, _connectionString);
-            var singleRecord = _ghClientApi.GetDictionaryRecordById(tableName, 1, _connectionString);
+            var allRecords = _ghClientApi.GetAllDictionaryRecords(tableName);
+            var singleRecord = _ghClientApi.GetDictionaryRecordById(tableName, 1);
 
             // Assert
             Assert.AreEqual(1, allRecords.Count(), "Failed to retrieve all records.");

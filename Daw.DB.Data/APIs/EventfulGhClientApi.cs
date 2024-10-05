@@ -110,9 +110,9 @@ namespace Daw.DB.Data.APIs
         /// </summary>
         /// <param name="connectionString"></param>
         /// <returns></returns>
-        public string CreateConnection(string connectionString)
+        public string CreateConnection()
         {
-            return _ghClientApi.CreateConnection(connectionString);
+            return _ghClientApi.CreateConnection();
         }
 
 
@@ -124,9 +124,9 @@ namespace Daw.DB.Data.APIs
         /// <param name="columns"></param>
         /// <param name="connectionString"></param>
         /// <returns></returns>
-        public string CreateTable(string tableName, Dictionary<string, string> columns, string connectionString)
+        public string CreateTable(string tableName, Dictionary<string, string> columns)
         {
-            return _ghClientApi.CreateTable(tableName, columns, connectionString);
+            return _ghClientApi.CreateTable(tableName, columns);
         }
 
 
@@ -139,9 +139,9 @@ namespace Daw.DB.Data.APIs
         /// <param name="record"></param>
         /// <param name="connectionString"></param>
         /// <returns></returns>
-        public string AddDictionaryRecord(string tableName, Dictionary<string, object> record, string connectionString)
+        public string AddDictionaryRecord(string tableName, Dictionary<string, object> record)
         {
-            var result = _ghClientApi.AddDictionaryRecord(tableName, record, connectionString);
+            var result = _ghClientApi.AddDictionaryRecord(tableName, record);
             _tableChangePublisher.PublishTableChanged(tableName, "AddRecord");
             return result;
         }
@@ -155,25 +155,25 @@ namespace Daw.DB.Data.APIs
         /// <param name="connectionString"></param>
         /// <param name="records"></param>
         /// <returns></returns>
-        public string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        public string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records)
         {
-            var result = _ghClientApi.AddDictionaryRecordInTransaction(tableName, records, connectionString);
+            var result = _ghClientApi.AddDictionaryRecordInTransaction(tableName, records);
             _tableChangePublisher.PublishTableChanged(tableName, "AddRecordsInTransaction");
             return result;
         }
 
 
-        public string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        public string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records)
         {
-            var result = _ghClientApi.AddDictionaryRecordBatch(tableName, records, connectionString);
+            var result = _ghClientApi.AddDictionaryRecordBatch(tableName, records);
             _tableChangePublisher.PublishTableChanged(tableName, "AddRecordsBatch");
             return result;
         }
 
 
-        public string AddDictionaryRecordBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        public string AddDictionaryRecordBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records)
         {
-            var result = _ghClientApi.AddDictionaryRecordBatchInTransaction(tableName, records, connectionString);
+            var result = _ghClientApi.AddDictionaryRecordBatchInTransaction(tableName, records);
             _tableChangePublisher.PublishTableChanged(tableName, "AddRecordsBatchInTransaction");
             return result;
         }
@@ -186,9 +186,9 @@ namespace Daw.DB.Data.APIs
         /// <param name="tableName"></param>
         /// <param name="connectionString"></param>
         /// <returns></returns>
-        public IEnumerable<dynamic> GetAllDictionaryRecords(string tableName, string connectionString)
+        public IEnumerable<dynamic> GetAllDictionaryRecords(string tableName)
         {
-            return _ghClientApi.GetAllDictionaryRecords(tableName, connectionString);
+            return _ghClientApi.GetAllDictionaryRecords(tableName);
         }
 
 
@@ -200,9 +200,9 @@ namespace Daw.DB.Data.APIs
         /// <param name="id"></param>
         /// <param name="connectionString"></param>
         /// <returns></returns>
-        public dynamic GetDictionaryRecordById(string tableName, object id, string connectionString)
+        public dynamic GetDictionaryRecordById(string tableName, object id)
         {
-            return _ghClientApi.GetDictionaryRecordById(tableName, id, connectionString);
+            return _ghClientApi.GetDictionaryRecordById(tableName, id);
         }
 
 
@@ -214,9 +214,9 @@ namespace Daw.DB.Data.APIs
         /// <param name="id"></param>
         /// <param name="record"></param>
         /// <param name="connectionString"></param>
-        public void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record, string connectionString)
+        public void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record)
         {
-            _ghClientApi.UpdateDictionaryRecord(tableName, id, record, connectionString);
+            _ghClientApi.UpdateDictionaryRecord(tableName, id, record);
             _tableChangePublisher.PublishTableChanged(tableName, "UpdateRecord");
         }
 
@@ -227,22 +227,22 @@ namespace Daw.DB.Data.APIs
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         /// <param name="connectionString"></param>
-        public void DeleteRecord(string tableName, object id, string connectionString)
+        public void DeleteRecord(string tableName, object id)
         {
-            _ghClientApi.DeleteRecord(tableName, id, connectionString);
+            _ghClientApi.DeleteRecord(tableName, id);
             _tableChangePublisher.PublishTableChanged(tableName, "DeleteRecord");
         }
 
-        public string DeleteTable(string tableName, string connectionString)
+        public string DeleteTable(string tableName)
         {
-            var result = _ghClientApi.DeleteTable(tableName, connectionString);
+            var result = _ghClientApi.DeleteTable(tableName);
             _tableChangePublisher.PublishTableChanged(tableName, "DeleteTable");
             return result;
         }
 
-        public IEnumerable<dynamic> GetTables(string connectionString)
+        public IEnumerable<dynamic> GetTables()
         {
-            return _ghClientApi.GetTables(connectionString);
+            return _ghClientApi.GetTables();
         }
 
 
@@ -264,7 +264,7 @@ namespace Daw.DB.Data.APIs
             _tableChangePublisher.TableChanged -= handler;
         }
 
-        public string CreateTables(IEnumerable<string> tableNames, IEnumerable<Dictionary<string, string>> columns, string connectionString)
+        public string CreateTables(IEnumerable<string> tableNames, IEnumerable<Dictionary<string, string>> columns)
         {
             throw new NotImplementedException();
         }

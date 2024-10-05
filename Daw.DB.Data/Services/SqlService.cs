@@ -5,13 +5,13 @@ namespace Daw.DB.Data.Services
 {
     public interface ISqlService
     {
-        IEnumerable<dynamic> ExecuteQuery(string sql, string connectionString, object parameters = null);
-        IEnumerable<T> ExecuteQuery<T>(string sql, string connectionString, object parameters = null);
-        void ExecuteCommand(string sql, string connectionString, object parameters = null);
-        void ExecuteInTransaction(IEnumerable<(string sql, object parameters)> sqlCommands, string connectionString);
+        IEnumerable<dynamic> ExecuteQuery(string sql, object parameters = null);
+        IEnumerable<T> ExecuteQuery<T>(string sql, object parameters = null);
+        void ExecuteCommand(string sql, object parameters = null);
+        void ExecuteInTransaction(IEnumerable<(string sql, object parameters)> sqlCommands);
 
         // New method to retrieve column metadata
-        Dictionary<string, string> GetColumnMetadata(string tableName, string connectionString);
+        Dictionary<string, string> GetColumnMetadata(string tableName);
     }
 
     public class SqlService : ISqlService
@@ -23,45 +23,45 @@ namespace Daw.DB.Data.Services
             _connectionFactory = connectionFactory;
         }
 
-        public IEnumerable<dynamic> ExecuteQuery(string sql, string connectionString, object parameters = null)
+        public IEnumerable<dynamic> ExecuteQuery(string sql, object parameters = null)
         {
-            using (var db = _connectionFactory.CreateConnection(connectionString))
+            using (var db = _connectionFactory.CreateConnection())
             {
                 db.Open();
                 return db.Query(sql, parameters);
             }
         }
 
-        public IEnumerable<T> ExecuteQuery<T>(string sql, string connectionString, object parameters = null)
+        public IEnumerable<T> ExecuteQuery<T>(string sql, object parameters = null)
         {
-            using (var db = _connectionFactory.CreateConnection(connectionString))
+            using (var db = _connectionFactory.CreateConnection())
             {
                 db.Open();
                 return db.Query<T>(sql, parameters);
             }
         }
 
-        public void ExecuteCommand(string sql, string connectionString, object parameters = null)
+        public void ExecuteCommand(string sql, object parameters = null)
         {
-            using (var db = _connectionFactory.CreateConnection(connectionString))
+            using (var db = _connectionFactory.CreateConnection())
             {
                 db.Open();
                 db.Execute(sql, parameters);
             }
         }
 
-        public void ExecuteInTransaction(IEnumerable<(string sql, object parameters)> sqlCommands, string connectionString)
+        public void ExecuteInTransaction(IEnumerable<(string sql, object parameters)> sqlCommands)
         {
-            using (var db = _connectionFactory.CreateConnection(connectionString))
+            using (var db = _connectionFactory.CreateConnection())
             {
                 db.Open();
                 using (var transaction = db.BeginTransaction())
                 {
                     try
                     {
-                        foreach (var command in sqlCommands)
+                        foreach (var (sql, parameters) in sqlCommands)
                         {
-                            db.Execute(command.sql, command.parameters, transaction);
+                            db.Execute(sql, parameters, transaction);
                         }
                         transaction.Commit();
                     }
@@ -75,12 +75,12 @@ namespace Daw.DB.Data.Services
         }
 
         // New method to retrieve column metadata
-        public Dictionary<string, string> GetColumnMetadata(string tableName, string connectionString)
+        public Dictionary<string, string> GetColumnMetadata(string tableName)
         {
             string query = $"PRAGMA table_info({tableName});";
             var columnMetadata = new Dictionary<string, string>();
 
-            var result = ExecuteQuery(query, connectionString);
+            var result = ExecuteQuery(query);
             foreach (var row in result)
             {
                 columnMetadata.Add(row.name, row.type); // Assuming 'name' and 'type' are fields in the PRAGMA result

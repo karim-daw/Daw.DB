@@ -10,14 +10,16 @@ namespace Daw.DB.GH
     public class GhcCreateTable : GH_Component
     {
         private readonly IGhClientApi _ghClientApi;
+        private readonly IDatabaseContext _databaseContext;
 
         public GhcCreateTable()
-          : base("CreateTable", "CT",
+          : base("Create Table", "CreateTbl",
             "Creates a table in the database",
             "Daw.DB", "CREATE")
         {
-            // Use the ApiFactory to get a pre-configured IClientApi instance to interact with the database
+            // Use the ApiFactory to get pre-configured instances
             _ghClientApi = ApiFactory.GetGhClientApi();
+            _databaseContext = ApiFactory.GetDatabaseContext();
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
@@ -58,13 +60,16 @@ namespace Daw.DB.GH
         // Wrapper method
         private string CreateTable(string tableName, List<string> columnNames, List<string> columnTypes)
         {
-
-            string connectionString = SQLiteConnectionFactory.ConnectionString;
-            if (string.IsNullOrWhiteSpace(connectionString))
+            if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
             {
                 return "Connection string has not been set yet. " +
-                    "You have to create a database first. Lay down a ConnectionString " +
-                    "component on the canvas, if a connection string is outputted";
+                       "You have to create a database first. Lay down a ConnectionString " +
+                       "component on the canvas.";
+            }
+
+            if (columnNames.Count != columnTypes.Count)
+            {
+                return "The number of column names and column types must be the same.";
             }
 
             var columns = new Dictionary<string, string>();
@@ -73,17 +78,15 @@ namespace Daw.DB.GH
                 columns.Add(columnNames[i], columnTypes[i]);
             }
 
-
             try
             {
-                _ghClientApi.CreateTable(tableName, columns, connectionString);
+                string result = _ghClientApi.CreateTable(tableName, columns);
+                return result;
             }
             catch (Exception ex)
             {
                 return $"Error creating table in GH component: {ex.Message}";
             }
-            return "Table created successfully.";
-
         }
 
         protected override System.Drawing.Bitmap Icon => null; // Add an icon if available

@@ -1,6 +1,8 @@
 ﻿using Daw.DB.Data.APIs;
+using Daw.DB.Data.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.IO;
 using System.Reflection;
 
@@ -8,64 +10,61 @@ namespace Daw.DB.Data
 {
     public static class ApiFactory
     {
-        private static IGenericClientApi _clientApi;
+        private static IServiceProvider _serviceProvider;
+
+        private static IDatabaseContext _databaseContext;
         private static IGhClientApi _ghClientApi;
         private static IEventfulGhClientApi _eventDrivenGhClientApi;
+
+        static ApiFactory()
+        {
+            // Load configuration from appsettings.json located in the same directory as the executing assembly
+            var configuration = new ConfigurationBuilder()
+                                .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)) // Use the directory of the executing assembly
+                                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                                .Build();
+
+            // Configure services based on the loaded configuration
+            _serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
+        }
+
+        // Method to get IDatabaseContext without exposing the ServiceProvider
+        public static IDatabaseContext GetDatabaseContext()
+        {
+            if (_databaseContext == null)
+            {
+                // Use GetRequiredService internally
+                _databaseContext = _serviceProvider.GetRequiredService<IDatabaseContext>();
+            }
+            return _databaseContext;
+        }
+
+        public static IGhClientApi GetGhClientApi()
+        {
+            if (_ghClientApi == null)
+            {
+                _ghClientApi = _serviceProvider.GetRequiredService<IGhClientApi>();
+            }
+            return _ghClientApi;
+        }
+
 
         public static IEventfulGhClientApi GetEventDrivenGhClientApi()
         {
             if (_eventDrivenGhClientApi == null)
             {
-                // Load configuration from appsettings.json located in the same directory as the executing assembly
-                var configuration = new ConfigurationBuilder()
-                                    .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)) // Use the directory of the executing assembly
-                                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                                    .Build();
-
-                // Configure services based on the loaded configuration
-                var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
-                _eventDrivenGhClientApi = serviceProvider.GetRequiredService<IEventfulGhClientApi>();
+                _eventDrivenGhClientApi = _serviceProvider.GetRequiredService<IEventfulGhClientApi>();
             }
             return _eventDrivenGhClientApi;
         }
 
-        public static IGenericClientApi GetGenericClientApi()
+        // Optionally, add a method to set the connection string
+        public static void SetConnectionString(string connectionString)
         {
-            if (_clientApi == null)
-            {
-                // Load configuration from appsettings.json located in the same directory as the executing assembly
-                var configuration = new ConfigurationBuilder()
-                                    .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)) // Use the directory of the executing assembly
-                                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                                    .Build();
-
-                // Configure services based on the loaded configuration
-                var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
-                _clientApi = serviceProvider.GetRequiredService<IGenericClientApi>();
-            }
-            return _clientApi;
+            GetDatabaseContext().ConnectionString = connectionString;
         }
 
-        /// <summary>
-        /// Get Grasshopper client api
-        /// Basic access to functionality for CRUD operations
-        /// </summary>
-        /// <returns></returns>
-        public static IGhClientApi GetGhClientApi()
-        {
-            if (_ghClientApi == null)
-            {
-                // Load configuration from appsettings.json located in the same directory as the executing assembly
-                var configuration = new ConfigurationBuilder()
-                                    .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)) // Use the directory of the executing assembly
-                                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                                    .Build();
-
-                // Configure services based on the loaded configuration
-                var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
-                _ghClientApi = serviceProvider.GetRequiredService<IGhClientApi>();
-            }
-            return _ghClientApi;
-        }
+        // Remove the ServiceProvider property to prevent GH layer from accessing it directly
+        // public static IServiceProvider ServiceProvider => _serviceProvider;
     }
 }

@@ -7,9 +7,9 @@ namespace Daw.DB.Data.Services
 
     public interface IJsonHandler
     {
-        void AddRecordFromJson(string tableName, string jsonRecord, string connectionString);
-        void AddTableFromJson(string tableName, string jsonSchema, string connectionString);
-        void UpdateRecordFromJson(string tableName, object id, string jsonRecord, string connectionString);
+        void AddRecordFromJson(string tableName, string jsonRecord);
+        void AddTableFromJson(string tableName, string jsonSchema);
+        void UpdateRecordFromJson(string tableName, object id, string jsonRecord);
     }
 
 
@@ -23,24 +23,24 @@ namespace Daw.DB.Data.Services
             _dictionaryHandler = dictionaryHandler;
         }
 
-        public void AddRecordFromJson(string tableName, string jsonRecord, string connectionString)
+        public void AddRecordFromJson(string tableName, string jsonRecord)
         {
             // using system.text.json
             var record = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonRecord);
-            _dictionaryHandler.AddRecord(tableName, record, connectionString);
+            _dictionaryHandler.AddRecord(tableName, record);
         }
 
-        public void AddTableFromJson(string tableName, string jsonSchema, string connectionString)
+        public void AddTableFromJson(string tableName, string jsonSchema)
         {
             var columns = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonSchema);
-            _dictionaryHandler.CreateTable(tableName, columns, connectionString);
+            _dictionaryHandler.CreateTable(tableName, columns);
         }
 
         // update record from json
-        public void UpdateRecordFromJson(string tableName, object id, string jsonRecord, string connectionString)
+        public void UpdateRecordFromJson(string tableName, object id, string jsonRecord)
         {
             var record = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonRecord);
-            _dictionaryHandler.UpdateRecord(tableName, id, record, connectionString);
+            _dictionaryHandler.UpdateRecord(tableName, id, record);
         }
     }
 }

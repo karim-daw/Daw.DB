@@ -1,4 +1,5 @@
 using Daw.DB.Data.Services;
+using System;
 using System.Collections.Generic;
 
 
@@ -6,111 +7,134 @@ namespace Daw.DB.Data.APIs
 {
     public interface IGhClientApi
     {
-        string CreateConnection(string connectionString);
-        string CreateTable(string tableName, Dictionary<string, string> columns, string connectionString);
-        string DeleteTable(string tableName, string connectionString);
+        string CreateConnection();
+        string CreateTable(string tableName, Dictionary<string, string> columns);
+        string DeleteTable(string tableName);
 
         // TODO: Create many tables
-        string CreateTables(IEnumerable<string> tableNames, IEnumerable<Dictionary<string, string>> columns, string connectionString);
+        string CreateTables(IEnumerable<string> tableNames, IEnumerable<Dictionary<string, string>> columns);
 
 
-        IEnumerable<dynamic> GetTables(string connectionString);
+        IEnumerable<dynamic> GetTables();
 
-        string AddDictionaryRecord(string tableName, Dictionary<string, object> record, string connectionString);
-        IEnumerable<dynamic> GetAllDictionaryRecords(string tableName, string connectionString);
-        dynamic GetDictionaryRecordById(string tableName, object id, string connectionString);
-        void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record, string connectionString);
-        void DeleteRecord(string tableName, object id, string connectionString);
-        string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> record, string connectionString);
-        string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
-        string AddDictionaryRecordBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString);
+        string AddDictionaryRecord(string tableName, Dictionary<string, object> record);
+        IEnumerable<dynamic> GetAllDictionaryRecords(string tableName);
+        dynamic GetDictionaryRecordById(string tableName, object id);
+        void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record);
+        void DeleteRecord(string tableName, object id);
+        string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> record);
+        string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records);
+        string AddDictionaryRecordBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records);
     }
     public class GhClientApi : IGhClientApi
     {
-        private readonly IDatabaseConnectionFactory _connectionFactory;
         private readonly IDictionaryHandler _dictionaryHandler;
-
+        private readonly IDatabaseContext _databaseContext;
 
         public GhClientApi(
-            IDatabaseConnectionFactory connectionFactory,
-            IDictionaryHandler dictionaryHandler)
+            IDictionaryHandler dictionaryHandler,
+            IDatabaseContext databaseContext)
         {
-            _connectionFactory = connectionFactory;
             _dictionaryHandler = dictionaryHandler;
+            _databaseContext = databaseContext;
+
         }
 
-        /// <summary>
-        /// Creates a connection to a new database with the given name.
-        /// </summary>
-        /// <param name="databasePath"></param>
-        /// <returns>Message output relating to success or failure of db operatations</returns>
-        public string CreateConnection(string connectionString)
+        public string CreateConnection()
         {
             try
             {
-                // Create the database connection to ensure the database file is created
-                using (var db = _connectionFactory.CreateConnection(connectionString))
+                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
                 {
-                    db.Open();
+                    return "Connection string is not set.";
                 }
 
-                // return the connection created message
-                return $"Database connection created at '{connectionString}'  successfully.";
+                // No need to create a connection here, as the connection is established when needed
+                return $"Database connection is configured.";
             }
-            catch (System.Exception)
+            catch (Exception ex)
             {
-                throw;
+                return $"Error configuring database connection: {ex.Message}";
             }
         }
 
-        /// <summary>
-        /// Creates a new table with the given name and columns.
-        /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="columns"></param>
-        /// <returns>Message output relating to success or failure of table operations</returns>
-        public string CreateTable(string tableName, Dictionary<string, string> columns, string connectionString)
+        public string CreateTable(string tableName, Dictionary<string, string> columns)
         {
             try
             {
-                _dictionaryHandler.CreateTable(tableName, columns, connectionString);
+                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
+                {
+                    return "Connection string is not set.";
+                }
+
+                _dictionaryHandler.CreateTable(tableName, columns);
                 return $"Table '{tableName}' created successfully.";
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                throw new System.Exception($"Error creating table '{tableName}': {ex.Message}");
+                return $"Error creating table '{tableName}': {ex.Message}";
             }
         }
 
-        /// <summary>
-        /// Adds a new record to the table with the given name.
-        /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="record"></param>
-        /// <returns>Message output relating to success or failure of table operations</returns>
-        public string AddDictionaryRecord(string tableName, Dictionary<string, object> record, string connectionString)
+        public string DeleteTable(string tableName)
         {
             try
             {
-                // add the record to the table
-                _dictionaryHandler.AddRecord(tableName, record, connectionString);
+                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
+                {
+                    return "Connection string is not set.";
+                }
 
-                // return the record added message wth the record details as a string
-                var stringRecord = record.ToString();
-                return $"Record added to table '{tableName}' successfully. Record: {stringRecord}";
+                _dictionaryHandler.DeleteTable(tableName);
+                return $"Table '{tableName}' deleted successfully.";
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
+            {
+                return $"Error deleting table '{tableName}': {ex.Message}";
+            }
+        }
+
+        public IEnumerable<dynamic> GetTables()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
+                {
+                    throw new InvalidOperationException("Connection string is not set.");
+                }
+
+                return _dictionaryHandler.GetTables();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving tables: {ex.Message}");
+            }
+        }
+
+        public string AddDictionaryRecord(string tableName, Dictionary<string, object> record)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
+                {
+                    return "Connection string is not set.";
+                }
+
+                _dictionaryHandler.AddRecord(tableName, record);
+                return $"Record added to table '{tableName}' successfully.";
+            }
+            catch (Exception ex)
             {
                 return $"Error adding record to table '{tableName}': {ex.Message}";
             }
         }
 
-        public string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        public string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records)
         {
             try
             {
                 // add the record to the table
-                _dictionaryHandler.AddRecordsInTransaction(tableName, records, connectionString);
+                _dictionaryHandler.AddRecordsInTransaction(tableName, records);
 
                 // return the record added message wth the record details as a string
                 var stringRecord = records.ToString();
@@ -124,12 +148,12 @@ namespace Daw.DB.Data.APIs
 
 
         // add dicitonary bath 
-        public string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        public string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records)
         {
             try
             {
                 // add the record to the table
-                _dictionaryHandler.AddRecordsBatch(tableName, records, connectionString);
+                _dictionaryHandler.AddRecordsBatch(tableName, records);
 
                 // return the record added message wth the record details as a string
                 var stringRecord = records.ToString();
@@ -142,12 +166,12 @@ namespace Daw.DB.Data.APIs
         }
 
         // add dicitonary bath in transaction
-        public string AddDictionaryRecordBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records, string connectionString)
+        public string AddDictionaryRecordBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records)
         {
             try
             {
                 // add the record to the table
-                _dictionaryHandler.AddRecordsBatchInTransaction(tableName, records, connectionString);
+                _dictionaryHandler.AddRecordsBatchInTransaction(tableName, records);
 
                 // return the record added message wth the record details as a string
                 var stringRecord = records.ToString();
@@ -165,11 +189,11 @@ namespace Daw.DB.Data.APIs
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
-        public IEnumerable<dynamic> GetAllDictionaryRecords(string tableName, string connectionString)
+        public IEnumerable<dynamic> GetAllDictionaryRecords(string tableName)
         {
             try
             {
-                var records = _dictionaryHandler.GetAllRecords(tableName, connectionString);
+                var records = _dictionaryHandler.GetAllRecords(tableName);
                 return records;
             }
             catch (System.Exception ex)
@@ -184,11 +208,11 @@ namespace Daw.DB.Data.APIs
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public dynamic GetDictionaryRecordById(string tableName, object id, string connectionString)
+        public dynamic GetDictionaryRecordById(string tableName, object id)
         {
             try
             {
-                var record = _dictionaryHandler.GetRecordById(tableName, id, connectionString);
+                var record = _dictionaryHandler.GetRecordById(tableName, id);
                 return record;
             }
             catch (System.Exception ex)
@@ -204,11 +228,11 @@ namespace Daw.DB.Data.APIs
         /// <param name="tableName"></param>
         /// <param name="id"></param>
         /// <param name="record"></param>
-        public void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record, string connectionString)
+        public void UpdateDictionaryRecord(string tableName, object id, Dictionary<string, object> record)
         {
             try
             {
-                _dictionaryHandler.UpdateRecord(tableName, id, record, connectionString);
+                _dictionaryHandler.UpdateRecord(tableName, id, record);
             }
             catch (System.Exception ex)
             {
@@ -222,11 +246,11 @@ namespace Daw.DB.Data.APIs
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="id"></param>
-        public void DeleteRecord(string tableName, object id, string connectionString)
+        public void DeleteRecord(string tableName, object id)
         {
             try
             {
-                _dictionaryHandler.DeleteRecord(tableName, id, connectionString);
+                _dictionaryHandler.DeleteRecord(tableName, id);
             }
             catch (System.Exception ex)
             {
@@ -234,33 +258,8 @@ namespace Daw.DB.Data.APIs
             }
         }
 
-        public string DeleteTable(string tableName, string connectionString)
-        {
-            try
-            {
-                _dictionaryHandler.DeleteTable(tableName, connectionString);
-                return $"Table '{tableName}' deleted successfully.";
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception($"Error deleting table '{tableName}': {ex.Message}");
-            }
-        }
 
-        public IEnumerable<dynamic> GetTables(string connectionString)
-        {
-            try
-            {
-                IEnumerable<dynamic> tables = _dictionaryHandler.GetTables(connectionString);
-                return tables;
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception($"Error retrieving tables: {ex.Message}");
-            }
-        }
-
-        public string CreateTables(IEnumerable<string> tableNames, IEnumerable<Dictionary<string, string>> columns, string connectionString)
+        public string CreateTables(IEnumerable<string> tableNames, IEnumerable<Dictionary<string, string>> columns)
         {
             throw new System.NotImplementedException();
         }

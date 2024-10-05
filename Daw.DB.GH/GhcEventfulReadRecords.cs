@@ -4,14 +4,15 @@ using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Daw.DB.GH
 {
     public class GhcEventfulReadRecords : GH_Component
     {
         private readonly IEventfulGhClientApi _eventDrivenGhClientApi;
+        private readonly IDatabaseContext _dataBaseContext;
         private bool _eventTriggered;
-
 
         public GhcEventfulReadRecords()
           : base("ReadRecordWithEvents", "RRW",
@@ -19,6 +20,7 @@ namespace Daw.DB.GH
               "Daw.DB", "READ")
         {
             _eventDrivenGhClientApi = ApiFactory.GetEventDrivenGhClientApi();
+            _dataBaseContext = ApiFactory.GetDatabaseContext();
             _eventTriggered = false;
         }
 
@@ -31,8 +33,7 @@ namespace Daw.DB.GH
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddTextParameter("Result", "R", "Result of the database operation", GH_ParamAccess.item);
-            pManager.AddTextParameter("Records", "R", "Records from the table", GH_ParamAccess.list);
+            pManager.AddTextParameter("Records", "R", "List of JSON formatted records from the table", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -41,31 +42,37 @@ namespace Daw.DB.GH
             string tableName = null;
             bool liveListen = false;
 
+            // Get input data
             if (!DA.GetData(0, ref tableName)) return;
             if (!DA.GetData(1, ref readRecord)) return;
             if (!DA.GetData(2, ref liveListen)) return;
 
+            // Manage live listening
             if (liveListen)
             {
+                UnsubscribeFromTableChanges(tableName);
                 SubscribeToTableChanges(tableName);
             }
-
-            // output all records from the table
-            List<string> records = new List<string>();
-
-            if (readRecord || _eventTriggered)
+            else
             {
-                _eventTriggered = false; // Reset event flag
-                var resultBuilder = new System.Text.StringBuilder();
-                foreach (var record in ReadRecords(tableName))
-                {
-                    resultBuilder.AppendLine(record);
-                    records.Add(record);
-                }
-                DA.SetData(0, resultBuilder.ToString());
+                UnsubscribeFromTableChanges(tableName);
             }
 
-            DA.SetDataList(1, records);
+            if (readRecord)
+            {
+                _eventTriggered = false; // Reset event flag (because we're manually reading)
+                var jsonRecordsList = new List<string>();
+
+                foreach (var record in ReadRecords(tableName))
+                {
+                    var recordDict = ConvertRecordToDictionary(record);
+                    string jsonRecord = JsonSerializer.Serialize(recordDict);
+                    jsonRecordsList.Add(jsonRecord);
+                }
+
+                // Output the list of JSON records to Grasshopper
+                DA.SetDataList(0, jsonRecordsList);
+            }
         }
 
         /// <summary>
@@ -85,19 +92,51 @@ namespace Daw.DB.GH
         }
 
         /// <summary>
+        /// Unsubscribe from table changes.
+        /// </summary>
+        /// <param name="tableName"></param>
+        private void UnsubscribeFromTableChanges(string tableName)
+        {
+            _eventDrivenGhClientApi.UnsubscribeFromTableChanges((sender, args) =>
+            {
+                if (args.TableName == tableName)
+                {
+                    _eventTriggered = false;
+                }
+            });
+        }
+
+        /// <summary>
         /// Read all records from the table with the given name.
-        /// This is a generator method that yields each record as a string.
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
-        private IEnumerable<string> ReadRecords(string tableName)
+        private IEnumerable<dynamic> ReadRecords(string tableName)
         {
-            string connectionString = SQLiteConnectionFactory.ConnectionString;
-            IEnumerable<dynamic> records = _eventDrivenGhClientApi.GetAllDictionaryRecords(tableName, connectionString);
+            IEnumerable<dynamic> records = _eventDrivenGhClientApi.GetAllDictionaryRecords(tableName);
             foreach (var record in records)
             {
-                yield return Convert.ToString(record);
+                yield return record;
             }
+        }
+
+        /// <summary>
+        /// Converts dynamic DapperRow objects to a dictionary of keys and values.
+        /// </summary>
+        private Dictionary<string, object> ConvertRecordToDictionary(dynamic record)
+        {
+            var recordDict = new Dictionary<string, object>();
+
+            // Cast the dynamic record to IDictionary to access keys and values
+            if (record is IDictionary<string, object> dict)
+            {
+                foreach (var kvp in dict)
+                {
+                    recordDict[kvp.Key] = kvp.Value;
+                }
+            }
+
+            return recordDict;
         }
 
         protected override System.Drawing.Bitmap Icon => null;

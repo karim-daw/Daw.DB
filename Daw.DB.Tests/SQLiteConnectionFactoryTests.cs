@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Data;
+using System.Data.SQLite;
 using System.IO;
 
 namespace Daw.DB.Tests
@@ -12,6 +13,7 @@ namespace Daw.DB.Tests
     public class SQLiteConnectionFactoryTests
     {
         private ISQLiteConnectionFactory _factory;
+        private IDatabaseContext _databaseContext;
 
         private string _databaseFilePath;
         private string _connectionString;
@@ -19,28 +21,37 @@ namespace Daw.DB.Tests
         [TestInitialize]
         public void Setup()
         {
-            // _factory = new SQLiteConnectionFactory();
+            // Build configuration
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                // Add other configuration sources if needed
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            // configure the factory
+            // Configure services
             var serviceProvider = ServiceConfiguration.ConfigureServices(configuration);
+
+            // Get the ISQLiteConnectionFactory instance
             _factory = serviceProvider.GetRequiredService<ISQLiteConnectionFactory>();
 
-            _databaseFilePath = Path.GetTempFileName();
+            // Get the IDatabaseContext instance
+            _databaseContext = serviceProvider.GetRequiredService<IDatabaseContext>();
+
+            // Set up a temporary database file path
+            _databaseFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
+
+            // Set the connection string in the database context
             _connectionString = $"Data Source={_databaseFilePath};Version=3;";
-
-
+            _databaseContext.ConnectionString = _connectionString;
         }
 
         [TestCleanup]
         public void Cleanup()
         {
             _factory = null;
+            _databaseContext = null;
 
-            // delete the temp file
+            // Delete the temp file
             if (File.Exists(_databaseFilePath))
             {
                 try
@@ -52,67 +63,33 @@ namespace Daw.DB.Tests
                     Console.WriteLine($"Failed to delete the file {_databaseFilePath}: {ex.Message}");
                 }
             }
-
         }
 
-        [TestMethod]
-        public void TestExtractDbPath_ValidConnectionString_ReturnsCorrectPath()
-        {
-            // arrange
-            string path = "C:\\Users\\daw\\source\\repos\\Daw.DB\\Daw.DB\\Daw.DB.Data\\Daw.DB.Data\\Data\\GhClient.db";
-            string connectionString = $"Data Source={path};Version=3;";
-
-            // act
-            string dbPath = SQLiteConnectionFactory.ExtractDbPath(connectionString);
-
-            // assert
-            Assert.AreEqual(path, dbPath);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void TestExtractDbPath_NullOrEmptyConnectionString_ThrowsException()
-        {
-            // act
-            SQLiteConnectionFactory.ExtractDbPath(null);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void TestExtractDbPath_MissingDataSource_ThrowsException()
-        {
-            // act
-            SQLiteConnectionFactory.ExtractDbPath("Version=3;");
-        }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
         public void TestCreateConnection_NullOrEmptyConnectionString_ThrowsException()
         {
-            // act
-            _factory.CreateConnection(null);
+            string invalidConnectionString = null;
+
+            // set the connection string in the database context
+            _databaseContext.ConnectionString = invalidConnectionString;
+
+            // Act
+            _factory.CreateConnection();
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void TestCreateConnection_FileNotFound_ThrowsException()
-        {
-            // arrange
-            string invalidConnectionString = "this_is_an_invalid_connection_string";
-            // act
-            _factory.CreateConnection(invalidConnectionString);
-        }
 
         [TestMethod]
         public void TestCreateConnection_ValidConnectionString_ReturnsSQLiteConnection()
         {
-
-            // act
-            using (var connection = _factory.CreateConnection(_connectionString))
+            // Act
+            using (var connection = _factory.CreateConnection())
             {
-                // assert
+                // Assert
                 Assert.IsNotNull(connection);
                 Assert.IsInstanceOfType(connection, typeof(IDbConnection));
+                Assert.AreEqual(_connectionString, connection.ConnectionString);
             }
         }
 
@@ -120,7 +97,7 @@ namespace Daw.DB.Tests
         [ExpectedException(typeof(ArgumentException))]
         public void TestCreateConnectionFromFilePath_NullOrEmptyPath_ThrowsException()
         {
-            // act
+            // Act
             _factory.CreateConnectionFromFilePath(null);
         }
 
@@ -128,28 +105,30 @@ namespace Daw.DB.Tests
         [ExpectedException(typeof(FileNotFoundException))]
         public void TestCreateConnectionFromFilePath_FileNotFound_ThrowsException()
         {
-            // arrange
+            // Arrange
             string invalidFilePath = "invalid_path.db";
 
-            // act
+            // Act
             _factory.CreateConnectionFromFilePath(invalidFilePath);
         }
 
         [TestMethod]
         public void TestCreateConnectionFromFilePath_ValidPath_ReturnsSQLiteConnection()
         {
-            // if postgress is used, skip this test
-            if (!string.IsNullOrWhiteSpace(_connectionString))
+            // Arrange
+            // Ensure the file exists
+            if (!File.Exists(_databaseFilePath))
             {
-                return;
+                SQLiteConnection.CreateFile(_databaseFilePath);
             }
 
-            // act
+            // Act
             using (var connection = _factory.CreateConnectionFromFilePath(_databaseFilePath))
             {
-                // assert
+                // Assert
                 Assert.IsNotNull(connection);
                 Assert.IsInstanceOfType(connection, typeof(IDbConnection));
+                Assert.IsTrue(connection.ConnectionString.Contains(_databaseFilePath));
             }
         }
     }

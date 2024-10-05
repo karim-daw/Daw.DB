@@ -220,11 +220,11 @@
   <ItemGroup>
     <Compile Include="ApiFactory.cs" />
     <Compile Include="APIs\EventfulGhClientApi.cs" />
-    <Compile Include="APIs\GenericClientApi.cs" />
     <Compile Include="APIs\GhClientApi.cs" />
     <Compile Include="Interfaces\IEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceConfiguration.cs" />
+    <Compile Include="Services\DatabaseContext.cs" />
     <Compile Include="Services\DictionaryHandler.cs" />
     <Compile Include="Services\EntityHandler.cs" />
     <Compile Include="Services\JsonHandler.cs" />
