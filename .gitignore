@@ -12,7 +12,6 @@ Daw.DB/DynamicEntities.db
 
 packages/
 
-Daw.DB.Tests/Properties/AssemblyInfo.cs
 
 # Ignore build output
 [Bb]in/
