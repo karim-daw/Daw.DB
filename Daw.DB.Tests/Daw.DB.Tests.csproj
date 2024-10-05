@@ -176,7 +176,6 @@
     <Compile Include="SQLiteConnectionFactoryTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlServiceTests.cs" />
-    <Compile Include="SupabaseClientTests.cs" />
     <Compile Include="QueryBuilderServiceTests.cs" />
   </ItemGroup>
   <ItemGroup>
