@@ -1,13 +1,12 @@
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("Daw.DB.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Gensler")]
+[assembly: AssemblyCompany("Daw")]
 [assembly: AssemblyProduct("Daw.DB.Tests")]
-[assembly: AssemblyCopyright("Copyright © Gensler 2024")]
+[assembly: AssemblyCopyright("Copyright © Daw 2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

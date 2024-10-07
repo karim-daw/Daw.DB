@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Daw.DB.Data")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Gensler")]
+[assembly: AssemblyCompany("Daw")]
 [assembly: AssemblyProduct("Daw.DB.Data")]
-[assembly: AssemblyCopyright("Copyright © Gensler 2024")]
+[assembly: AssemblyCopyright("Copyright © Daw 2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
