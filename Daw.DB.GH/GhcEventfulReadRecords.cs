@@ -13,6 +13,8 @@ namespace Daw.DB.GH
         private readonly IEventfulGhClientApi _eventDrivenGhClientApi;
         private readonly IDatabaseContext _dataBaseContext;
         private bool _eventTriggered;
+        private bool _liveListening;
+        private bool _subscribedToTable;
 
         public GhcEventfulReadRecords()
           : base("ReadRecordWithEvents", "RRW",
@@ -22,6 +24,8 @@ namespace Daw.DB.GH
             _eventDrivenGhClientApi = ApiFactory.GetEventDrivenGhClientApi();
             _dataBaseContext = ApiFactory.GetDatabaseContext();
             _eventTriggered = false;
+            _liveListening = false;
+            _subscribedToTable = false;
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
@@ -47,17 +51,23 @@ namespace Daw.DB.GH
             if (!DA.GetData(1, ref readRecord)) return;
             if (!DA.GetData(2, ref liveListen)) return;
 
-            // Manage live listening
-            if (liveListen)
+            // Manage live listening state
+            if (liveListen != _liveListening)
             {
-                UnsubscribeFromTableChanges(tableName);
-                SubscribeToTableChanges(tableName);
-            }
-            else
-            {
-                UnsubscribeFromTableChanges(tableName);
+                _liveListening = liveListen;
+                if (_liveListening && !_subscribedToTable)
+                {
+                    SubscribeToTableChanges(tableName);
+                    _subscribedToTable = true;
+                }
+                else if (!_liveListening && _subscribedToTable)
+                {
+                    UnsubscribeFromTableChanges(tableName);
+                    _subscribedToTable = false;
+                }
             }
 
+            // Perform manual read when 'Read' is true, independent of live listening
             if (readRecord)
             {
                 _eventTriggered = false; // Reset event flag (because we're manually reading)
@@ -83,7 +93,7 @@ namespace Daw.DB.GH
         {
             _eventDrivenGhClientApi.SubscribeToTableChanges((sender, args) =>
             {
-                if (args.TableName == tableName)
+                if (_liveListening && args.TableName == tableName)
                 {
                     _eventTriggered = true;
                     ExpireSolution(true); // Trigger Grasshopper to re-solve the component
