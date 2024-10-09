@@ -14,7 +14,7 @@ namespace Daw.DB.GH
         private readonly IDatabaseContext _databaseContext;
 
         public GhcCreateRecord()
-          : base("Create Record", "CreateRec",
+          : base("Create Record", "CR",
             "Creates a record and inserts it into the database",
             "Daw.DB", "CREATE")
         {
