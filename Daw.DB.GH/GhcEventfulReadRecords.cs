@@ -73,16 +73,27 @@ namespace Daw.DB.GH
                 _eventTriggered = false; // Reset event flag (because we're manually reading)
                 var jsonRecordsList = new List<string>();
 
+                // ensure indented JSON output
+                JsonSerializerOptions options = SetJsonIndentationOptions();
+
                 foreach (var record in ReadRecords(tableName))
                 {
                     var recordDict = ConvertRecordToDictionary(record);
-                    string jsonRecord = JsonSerializer.Serialize(recordDict);
+                    string jsonRecord = JsonSerializer.Serialize(recordDict, options);
                     jsonRecordsList.Add(jsonRecord);
                 }
 
                 // Output the list of JSON records to Grasshopper
                 DA.SetDataList(0, jsonRecordsList);
             }
+        }
+
+        private static JsonSerializerOptions SetJsonIndentationOptions()
+        {
+            return new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
         }
 
         /// <summary>
