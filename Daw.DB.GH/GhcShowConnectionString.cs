@@ -5,14 +5,14 @@ using System;
 
 namespace Daw.DB.GH
 {
-    public class GhcConnectionString : GH_Component
+    public class GhcShowConnectionString : GH_Component
     {
         private readonly IDatabaseContext _databaseContext;
 
-        public GhcConnectionString()
-          : base("Connection String", "ConnStr",
+        public GhcShowConnectionString()
+          : base("Show Connection String", "SCS",
               "Displays the full connection string when the database is connected for the first time. This will also persist to other components.",
-            "Daw.DB", "Config")
+            "Daw.DB", "CONFIGURATION")
         {
             // Obtain the IDatabaseContext instance from the ApiFactory
             _databaseContext = ApiFactory.GetDatabaseContext();
