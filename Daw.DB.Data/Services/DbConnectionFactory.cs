@@ -6,13 +6,18 @@ using System.IO;
 
 namespace Daw.DB.Data.Services
 {
+    public interface IPingable
+    {
+        // Method to check if the database is reachable
+        bool Ping(string connectionString);
+    }
 
     public interface IDatabaseConnectionFactory
     {
         IDbConnection CreateConnection();
     }
 
-    public interface ISQLiteConnectionFactory : IDatabaseConnectionFactory
+    public interface ISQLiteConnectionFactory : IDatabaseConnectionFactory, IPingable
     {
         IDbConnection CreateConnectionFromFilePath(string dbPath);
     }
@@ -28,6 +33,24 @@ namespace Daw.DB.Data.Services
         public SQLiteConnectionFactory(IDatabaseContext databaseContext)
         {
             _databaseContext = databaseContext;
+        }
+
+        public bool Ping(string connectionString)
+        {
+            try
+            {
+                using (var connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
+                    return true;
+                }
+
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
         }
 
 

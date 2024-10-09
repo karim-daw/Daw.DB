@@ -131,5 +131,27 @@ namespace Daw.DB.Tests
                 Assert.IsTrue(connection.ConnectionString.Contains(_databaseFilePath));
             }
         }
+
+        // test ping
+        [TestMethod]
+
+        public void TestPing_ValidConnection_ReturnsTrue()
+        {
+            // Act
+            Assert.IsTrue(_factory.Ping(_connectionString));
+
+        }
+
+        // assert that false is returned for any exception
+        [TestMethod]
+        public void TestPing_ExceptionThrown_ReturnsFalse()
+        {
+            // Arrange
+            string invalidConnectionString = "invalid_connection_string";
+
+            // Act
+            Assert.IsFalse(_factory.Ping(invalidConnectionString));
+        }
+
     }
 }

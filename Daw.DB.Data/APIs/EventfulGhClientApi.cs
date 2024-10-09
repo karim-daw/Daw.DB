@@ -268,6 +268,11 @@ namespace Daw.DB.Data.APIs
         {
             throw new NotImplementedException();
         }
+
+        public bool Ping(string connectionString)
+        {
+            return _ghClientApi.Ping(connectionString);
+        }
     }
 
 }

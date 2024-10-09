@@ -1,6 +1,7 @@
 using Daw.DB.Data.Services;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 
 namespace Daw.DB.Data.APIs
@@ -25,19 +26,42 @@ namespace Daw.DB.Data.APIs
         string AddDictionaryRecordInTransaction(string tableName, IEnumerable<Dictionary<string, object>> record);
         string AddDictionaryRecordBatch(string tableName, IEnumerable<Dictionary<string, object>> records);
         string AddDictionaryRecordBatchInTransaction(string tableName, IEnumerable<Dictionary<string, object>> records);
+        bool Ping(string connectionString);
     }
     public class GhClientApi : IGhClientApi
     {
         private readonly IDictionaryHandler _dictionaryHandler;
         private readonly IDatabaseContext _databaseContext;
+        private readonly IDatabaseConnectionFactory _databaseConnectionFactory;
 
         public GhClientApi(
             IDictionaryHandler dictionaryHandler,
-            IDatabaseContext databaseContext)
+            IDatabaseContext databaseContext,
+            IDatabaseConnectionFactory databaseConnectionFactory)
         {
             _dictionaryHandler = dictionaryHandler;
             _databaseContext = databaseContext;
+            _databaseConnectionFactory = databaseConnectionFactory;
 
+        }
+
+        // checks if the connection string is pointing to a valid database
+        public bool Ping(string connectionString)
+        {
+            return IsValidDatabase(connectionString);
+        }
+
+        private bool IsValidDatabase(string connectionString)
+        {
+            // Check if the factory supports pinging
+            if (_databaseConnectionFactory is IPingable pingableFactory)
+            {
+                return pingableFactory.Ping(connectionString);
+            }
+            else
+            {
+                throw new NotSupportedException("Ping operation is not supported by this connection factory.");
+            }
         }
 
         public string CreateConnection()
@@ -156,7 +180,11 @@ namespace Daw.DB.Data.APIs
                 _dictionaryHandler.AddRecordsBatch(tableName, records);
 
                 // return the record added message wth the record details as a string
-                var stringRecord = records.ToString();
+                // var stringRecord = records.ToString();
+
+                // return record as json indented
+                var stringRecord = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
+
                 return $"Record added to table '{tableName}' successfully. Record: {stringRecord}";
             }
             catch (System.Exception ex)
@@ -263,5 +291,6 @@ namespace Daw.DB.Data.APIs
         {
             throw new System.NotImplementedException();
         }
+
     }
 }
