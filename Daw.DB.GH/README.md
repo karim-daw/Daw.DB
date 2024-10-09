@@ -52,8 +52,8 @@ This repository contains a comprehensive suite of Grasshopper components designe
 - **GhcImportFromCSV**: Imports data into a table from a CSV file.
 
 ### 5. Connection and Configuration Components
-- **GhcSetConnectionString**: Sets the active connection string for other components to use.
-- **GhcGetConnectionStatus**: Checks the current connection status and any active transactions.
+- [x] GhcSetConnectionString**: Sets the active connection string for other components to use.
+- [x] GhcGetConnectionStatus**: Checks the current connection status and any active transactions.
 - **GhcConfigureDatabase**: Configures database settings, such as timeout, encryption, and other SQLite-specific settings.
 
 ### 6. Advanced and Specialized Components
