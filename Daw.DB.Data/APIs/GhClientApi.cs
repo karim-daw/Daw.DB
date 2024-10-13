@@ -73,6 +73,10 @@ namespace Daw.DB.Data.APIs
                     return "Connection string is not set.";
                 }
 
+                // just use ping to check if the connection is valid
+                Ping(_databaseContext.ConnectionString);
+
+
                 // No need to create a connection here, as the connection is established when needed
                 return $"Database connection is configured.";
             }
