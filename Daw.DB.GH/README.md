@@ -18,8 +18,8 @@ This repository contains a comprehensive suite of Grasshopper components designe
 ### 2. Record Management Components
 - [x] **GhcCreateRecord**: Inserts new records into a table.
 - [x] **GhcReadRecords**: Reads all records from a specified table.
-- [ ] **GhcDeleteRecord**: Deletes records from a table based on a primary key or condition.
-- [ ] **GhcUpdateRecord**: Updates existing records in a table based on a primary key or condition.
+- [x] **GhcDeleteRecord**: Deletes records from a table based on a primary key or condition.
+- [x] **GhcUpdateRecord**: Updates existing records in a table based on a primary key or condition.
 - [ ] **GhcFilterRecords**: Filters records based on specified conditions.
 - [ ] **GhcSortRecords**: Sorts records based on specified columns and order.
 - [ ] **GhcOneToOneJoin**: Joins records from two tables based on a common key.
