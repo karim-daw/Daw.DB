@@ -17,7 +17,7 @@ namespace Daw.DB.GH
         public GhcUpdateRecord()
           : base("Update Record", "UR",
               "Updates a record within an existing table in the database given a valid record and id",
-              "Category", "Subcategory")
+              "Daw.DB", "UPDATE")
         {
             _eventfulGhClientApi = ApiFactory.GetEventDrivenGhClientApi();
             _databaseContext = ApiFactory.GetDatabaseContext();
@@ -99,7 +99,10 @@ namespace Daw.DB.GH
             // DO THE ACTUAL WORK
             try
             {
+
+                // TODO: The actual type of the record should be known, currently it is a dictionary of string, object but not working
                 var record = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonRecord);
+
                 _eventfulGhClientApi.UpdateDictionaryRecord(tableName, recordId, record);
                 return "Following record has been updated: " + jsonRecord;
             }
