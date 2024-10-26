@@ -1,14 +1,11 @@
-﻿using Daw.DB.Data;
-using Daw.DB.Data.APIs;
+﻿using Daw.DB.Data.APIs;
 using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
 using System.Collections.Generic;
 
-namespace Daw.DB.GH
-{
-    public class GhcCreateRecordsBatch : GH_Component
-    {
+namespace Daw.DB.GH {
+    public class GhcCreateRecordsBatch : GH_Component {
         private readonly IEventfulGhClientApi _eventfulGhClientApi;
         private readonly IDatabaseContext _databaseContext;
 
@@ -18,8 +15,7 @@ namespace Daw.DB.GH
         public GhcCreateRecordsBatch()
           : base("Create Records Batch", "CreateBatch",
             "Creates a batch of records and inserts them into the database",
-            "Daw.DB", "CREATE")
-        {
+            "Daw.DB", "CREATE") {
             // Use the ApiFactory to get pre-configured instances
             _eventfulGhClientApi = ApiFactory.GetEventDrivenGhClientApi();
             _databaseContext = ApiFactory.GetDatabaseContext();
@@ -28,8 +24,7 @@ namespace Daw.DB.GH
         /// <summary>
         /// Registers all the input parameters for this component.
         /// </summary>
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.AddTextParameter("TableName", "TN", "Name of the table to insert the records into", GH_ParamAccess.item);
             pManager.AddBooleanParameter("AddRecords", "AR", "Boolean to trigger record addition", GH_ParamAccess.item);
             pManager.AddTextParameter("RecordKeys", "RK", "List of keys (column names) for the records", GH_ParamAccess.list);
@@ -39,8 +34,7 @@ namespace Daw.DB.GH
         /// <summary>
         /// Registers all the output parameters for this component.
         /// </summary>
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.AddTextParameter("Result", "R", "Result of the database operation", GH_ParamAccess.item);
         }
 
@@ -48,65 +42,59 @@ namespace Daw.DB.GH
         /// This is the method that actually does the work.
         /// </summary>
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             bool addRecords = false;
             string tableName = null;
             List<string> recordKeys = new List<string>();
             List<string> recordValues = new List<string>();
 
             // Retrieve input data
-            if (!DA.GetData(0, ref tableName)) return;
-            if (!DA.GetData(1, ref addRecords)) return;
-            if (!DA.GetDataList(2, recordKeys)) return;
-            if (!DA.GetDataList(3, recordValues)) return;
+            if (!DA.GetData(0, ref tableName))
+                return;
+            if (!DA.GetData(1, ref addRecords))
+                return;
+            if (!DA.GetDataList(2, recordKeys))
+                return;
+            if (!DA.GetDataList(3, recordValues))
+                return;
 
             // Add records to the table
-            if (addRecords)
-            {
+            if (addRecords) {
                 string result = CreateRecords(tableName, recordKeys, recordValues);
                 DA.SetData(0, result);
             }
         }
 
         // Wrapper method
-        private string CreateRecords(string tableName, List<string> recordKeys, List<string> recordValues)
-        {
-            try
-            {
+        private string CreateRecords(string tableName, List<string> recordKeys, List<string> recordValues) {
+            try {
                 // Check if the connection string is set
-                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString))
-                {
+                if (string.IsNullOrWhiteSpace(_databaseContext.ConnectionString)) {
                     return "Connection string has not been set yet. " +
                            "You have to create a database first. Use the Create Database component.";
                 }
 
-                if (recordKeys == null || recordKeys.Count == 0)
-                {
+                if (recordKeys == null || recordKeys.Count == 0) {
                     return "Record keys (column names) are required.";
                 }
 
-                if (recordValues == null || recordValues.Count == 0)
-                {
+                if (recordValues == null || recordValues.Count == 0) {
                     return "Record values are required.";
                 }
 
                 // Calculate the number of records
                 int numRecords = recordValues.Count / recordKeys.Count;
 
-                if (recordValues.Count % recordKeys.Count != 0)
-                {
+                if (recordValues.Count % recordKeys.Count != 0) {
                     return "The number of record values must be a multiple of the number of record keys.";
                 }
 
                 // Build the list of records
                 var recordList = new List<Dictionary<string, object>>();
 
-                for (int i = 0; i < numRecords; i++)
-                {
+                for (int i = 0; i < numRecords; i++) {
                     var record = new Dictionary<string, object>();
-                    for (int j = 0; j < recordKeys.Count; j++)
-                    {
+                    for (int j = 0; j < recordKeys.Count; j++) {
                         int valueIndex = i * recordKeys.Count + j;
                         record.Add(recordKeys[j], recordValues[valueIndex]);
                     }
@@ -118,8 +106,7 @@ namespace Daw.DB.GH
 
                 return result;
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 return $"Error adding records: {ex.Message}";
             }
         }

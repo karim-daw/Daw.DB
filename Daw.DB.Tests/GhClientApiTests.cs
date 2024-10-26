@@ -8,18 +8,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Daw.DB.Tests
-{
+namespace Daw.DB.Tests {
     [TestClass]
-    public class GhClientApiTests
-    {
+    public class GhClientApiTests {
         private IGhClientApi _ghClientApi;
         private IDatabaseContext _databaseContext;
         private string _databaseFilePath;
 
         [TestInitialize]
-        public void Setup()
-        {
+        public void Setup() {
             // Load configuration from appsettings.json
             var configuration = new ConfigurationBuilder()
                 // Adjust the base path as needed
@@ -41,28 +38,23 @@ namespace Daw.DB.Tests
         }
 
         [TestCleanup]
-        public void Cleanup()
-        {
+        public void Cleanup() {
             // Ensure all connections are closed before cleanup
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            if (File.Exists(_databaseFilePath))
-            {
-                try
-                {
+            if (File.Exists(_databaseFilePath)) {
+                try {
                     File.Delete(_databaseFilePath);
                 }
-                catch (IOException ex)
-                {
+                catch (IOException ex) {
                     Console.WriteLine($"Failed to delete the file {_databaseFilePath}: {ex.Message}");
                 }
             }
         }
 
         [TestMethod]
-        public void DeleteTable_ShouldDeleteTableSuccessfully()
-        {
+        public void DeleteTable_ShouldDeleteTableSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -82,8 +74,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void DeleteTable_ShouldThrowExceptionWhenTableDoesNotExist()
-        {
+        public void DeleteTable_ShouldThrowExceptionWhenTableDoesNotExist() {
             // Arrange
             string tableName = "NonExistingTable";
 
@@ -97,8 +88,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void DeleteTable_ShouldDeleteWithManyTables()
-        {
+        public void DeleteTable_ShouldDeleteWithManyTables() {
             // Arrange 
             string tableName1 = "TestTable1";
             string tableName2 = "TestTable2";
@@ -124,8 +114,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void AddDictionaryRecord_ShouldAddRecordSuccessfully()
-        {
+        public void AddDictionaryRecord_ShouldAddRecordSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -151,8 +140,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void AddDictionaryRecordSingle_ShouldAddRecord()
-        {
+        public void AddDictionaryRecordSingle_ShouldAddRecord() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -175,8 +163,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void AddDictionaryRecordBatch_ShouldAddRecordsSuccessfully()
-        {
+        public void AddDictionaryRecordBatch_ShouldAddRecordsSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -204,8 +191,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void UpdateDictionaryRecord_ShouldUpdateRecordSuccessfully()
-        {
+        public void UpdateDictionaryRecord_ShouldUpdateRecordSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -236,8 +222,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void DeleteRecord_ShouldDeleteRecordSuccessfully()
-        {
+        public void DeleteRecord_ShouldDeleteRecordSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -263,8 +248,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void MultipleOperations_ShouldHandleCorrectly()
-        {
+        public void MultipleOperations_ShouldHandleCorrectly() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -295,8 +279,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void AddDictionaryRecordInTransaction_ShouldAddRecordsSuccessfully()
-        {
+        public void AddDictionaryRecordInTransaction_ShouldAddRecordsSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -324,8 +307,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void ReadOperations_ShouldRetrieveRecordsSuccessfully()
-        {
+        public void ReadOperations_ShouldRetrieveRecordsSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>

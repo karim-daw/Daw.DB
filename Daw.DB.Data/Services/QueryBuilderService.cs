@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Daw.DB.Data.Services
-{
-    public interface IQueryBuilderService
-    {
+namespace Daw.DB.Data.Services {
+    public interface IQueryBuilderService {
         string BuildCreateTableQuery(string tableName, Dictionary<string, string> columns);
         string BuildCheckTableExistsQuery(string tableName);
         string BuildInsertQuery(string tableName, Dictionary<string, object> record);
@@ -18,33 +16,28 @@ namespace Daw.DB.Data.Services
         string BuildGetAllTableNamesQuery();
     }
 
-    public class QueryBuilderService : IQueryBuilderService
-    {
+    public class QueryBuilderService : IQueryBuilderService {
         private const string DefaultIdColumn = "Id";
 
-        public string BuildCreateTableQuery(string tableName, Dictionary<string, string> columns)
-        {
+        public string BuildCreateTableQuery(string tableName, Dictionary<string, string> columns) {
             // Inject Id column if it doesn't exist
             columns = InjectIdColumn(columns);
             var columnsDefinition = string.Join(", ", columns.Select(kv => $"{kv.Key} {kv.Value}"));
             return $"CREATE TABLE {tableName} ({columnsDefinition})";
         }
 
-        public string BuildCheckTableExistsQuery(string tableName)
-        {
+        public string BuildCheckTableExistsQuery(string tableName) {
             return $"SELECT name FROM sqlite_master WHERE type='table' AND name='{tableName}'";
         }
 
-        public string BuildInsertQuery(string tableName, Dictionary<string, object> record)
-        {
+        public string BuildInsertQuery(string tableName, Dictionary<string, object> record) {
             // Get column names and values from record
             var columns = string.Join(", ", record.Keys);
             var values = string.Join(", ", record.Keys.Select(k => $"@{k}"));
             return $"INSERT INTO {tableName} ({columns}) VALUES ({values})";
         }
 
-        public (string query, Dictionary<string, object> parameters) BuildBatchInsertQuery(string tableName, IEnumerable<Dictionary<string, object>> records, int batchSize = 1000)
-        {
+        public (string query, Dictionary<string, object> parameters) BuildBatchInsertQuery(string tableName, IEnumerable<Dictionary<string, object>> records, int batchSize = 1000) {
             if (records == null || !records.Any())
                 throw new ArgumentException("Records collection cannot be null or empty.");
 
@@ -60,15 +53,13 @@ namespace Daw.DB.Data.Services
             int batchCounter = 0;
             int recordIndex = 0;
 
-            foreach (var record in records)
-            {
+            foreach (var record in records) {
                 // Create value placeholders for the current record
                 var values = string.Join(", ", record.Keys.Select(k => $"@{k}{recordIndex}"));
                 currentBatch.Enqueue($"({values})");
 
                 // Add the actual values to the parameters dictionary
-                foreach (var kvp in record)
-                {
+                foreach (var kvp in record) {
                     parameters[$"{kvp.Key}{recordIndex}"] = kvp.Value;
                 }
 
@@ -76,8 +67,7 @@ namespace Daw.DB.Data.Services
                 batchCounter++;
 
                 // If batch size is reached, append the batch insert statement
-                if (batchCounter == batchSize)
-                {
+                if (batchCounter == batchSize) {
                     queryBuilder.Append($"INSERT INTO {tableName} ({columns}) VALUES {string.Join(", ", currentBatch)};");
                     currentBatch.Clear();
                     batchCounter = 0;
@@ -85,16 +75,14 @@ namespace Daw.DB.Data.Services
             }
 
             // Append any remaining records in the last batch
-            if (currentBatch.Any())
-            {
+            if (currentBatch.Any()) {
                 queryBuilder.Append($"INSERT INTO {tableName} ({columns}) VALUES {string.Join(", ", currentBatch)};");
             }
 
             return (queryBuilder.ToString(), parameters);
         }
 
-        public string BuildUpdateQuery(string tableName, Dictionary<string, object> updatedValues)
-        {
+        public string BuildUpdateQuery(string tableName, Dictionary<string, object> updatedValues) {
             if (tableName == null)
                 throw new ArgumentNullException(nameof(tableName));
 
@@ -107,8 +95,7 @@ namespace Daw.DB.Data.Services
             return $"UPDATE {tableName} SET {setClause} WHERE {DefaultIdColumn} = @{DefaultIdColumn}";
         }
 
-        public string BuildSelectQuery(string tableName, string whereClause = null)
-        {
+        public string BuildSelectQuery(string tableName, string whereClause = null) {
             if (tableName == null)
                 throw new ArgumentNullException(nameof(tableName));
 
@@ -117,8 +104,7 @@ namespace Daw.DB.Data.Services
                 : $"SELECT * FROM {tableName} WHERE {whereClause}";
         }
 
-        public string BuildDeleteQuery(string tableName)
-        {
+        public string BuildDeleteQuery(string tableName) {
             if (tableName == null)
                 throw new ArgumentNullException(nameof(tableName));
 
@@ -128,26 +114,22 @@ namespace Daw.DB.Data.Services
             return $"DELETE FROM {tableName} WHERE {DefaultIdColumn} = @{DefaultIdColumn}";
         }
 
-        private Dictionary<string, string> InjectIdColumn(Dictionary<string, string> columns)
-        {
+        private Dictionary<string, string> InjectIdColumn(Dictionary<string, string> columns) {
             // Create a copy of columns dictionary quickly
             var columnsCopy = new Dictionary<string, string>(columns);
 
-            if (!columnsCopy.ContainsKey(DefaultIdColumn))
-            {
+            if (!columnsCopy.ContainsKey(DefaultIdColumn)) {
                 columnsCopy.Add(DefaultIdColumn, "INTEGER PRIMARY KEY AUTOINCREMENT");
             }
 
             return columnsCopy;
         }
 
-        public string BuildDeleteTableQuery(string tableName)
-        {
+        public string BuildDeleteTableQuery(string tableName) {
             return $"DROP TABLE IF EXISTS {tableName}";
         }
 
-        public string BuildGetAllTableNamesQuery()
-        {
+        public string BuildGetAllTableNamesQuery() {
             return "SELECT name FROM sqlite_master WHERE type='table'";
         }
     }

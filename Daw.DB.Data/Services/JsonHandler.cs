@@ -2,11 +2,9 @@
 using System.Text.Json;
 
 
-namespace Daw.DB.Data.Services
-{
+namespace Daw.DB.Data.Services {
 
-    public interface IJsonHandler
-    {
+    public interface IJsonHandler {
         void AddRecordFromJson(string tableName, string jsonRecord);
         void AddTableFromJson(string tableName, string jsonSchema);
         void UpdateRecordFromJson(string tableName, object id, string jsonRecord);
@@ -14,31 +12,26 @@ namespace Daw.DB.Data.Services
 
 
 
-    public class JsonHandler : IJsonHandler
-    {
+    public class JsonHandler : IJsonHandler {
         private readonly IDictionaryHandler _dictionaryHandler;
 
-        public JsonHandler(IDictionaryHandler dictionaryHandler)
-        {
+        public JsonHandler(IDictionaryHandler dictionaryHandler) {
             _dictionaryHandler = dictionaryHandler;
         }
 
-        public void AddRecordFromJson(string tableName, string jsonRecord)
-        {
+        public void AddRecordFromJson(string tableName, string jsonRecord) {
             // using system.text.json
             var record = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonRecord);
             _dictionaryHandler.AddRecord(tableName, record);
         }
 
-        public void AddTableFromJson(string tableName, string jsonSchema)
-        {
+        public void AddTableFromJson(string tableName, string jsonSchema) {
             var columns = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonSchema);
             _dictionaryHandler.CreateTable(tableName, columns);
         }
 
         // update record from json
-        public void UpdateRecordFromJson(string tableName, object id, string jsonRecord)
-        {
+        public void UpdateRecordFromJson(string tableName, object id, string jsonRecord) {
             var record = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonRecord);
             _dictionaryHandler.UpdateRecord(tableName, id, record);
         }

@@ -1,8 +1,8 @@
-﻿namespace Daw.DB.Data.Interfaces
-{
-    public interface IEntity
-    {
+﻿namespace Daw.DB.Data.Interfaces {
+    public interface IEntity {
 
-        string Name { get; set; }
+        string Name {
+            get; set;
+        }
     }
 }

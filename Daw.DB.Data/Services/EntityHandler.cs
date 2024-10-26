@@ -5,11 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Daw.DB.Data.Services
-{
+namespace Daw.DB.Data.Services {
     // TODO: use transaction services to handle transactions 
-    public interface IEntityHandler<T> where T : class, IEntity
-    {
+    public interface IEntityHandler<T> where T : class, IEntity {
         void CreateTable(T entity);
         void AddRecord(string tableName, T record);
         IEnumerable<T> GetAllRecords(string tableName);
@@ -18,136 +16,116 @@ namespace Daw.DB.Data.Services
         void DeleteRecord(string tableName, object id);
     }
 
-    public class EntityHandler<T> : IEntityHandler<T> where T : class, IEntity
-    {
+    public class EntityHandler<T> : IEntityHandler<T> where T : class, IEntity {
         private readonly ISqlService _sqlService;
         private readonly ILogger<EntityHandler<T>> _logger;
 
         // Assuming "Id" is the primary key column name
         private const string DefaultIdColumn = "Id";
 
-        public EntityHandler(ISqlService sqlService, ILogger<EntityHandler<T>> logger)
-        {
+        public EntityHandler(ISqlService sqlService, ILogger<EntityHandler<T>> logger) {
             _sqlService = sqlService;
             _logger = logger;
         }
 
-        public void CreateTable(T entity)
-        {
+        public void CreateTable(T entity) {
             string tableName;
             string columnsDefinition;
             string createTableQuery;
 
-            if (entity == null)
-            {
+            if (entity == null) {
                 throw new System.Exception("Entity is null.");
             }
 
 
             // Get the table name from the entity type
-            try
-            {
+            try {
                 tableName = GetTableName(entity);
             }
-            catch (System.Exception ex)
-            {
+            catch (System.Exception ex) {
                 _logger.LogError(ex, "Error getting table name.");
                 throw new System.Exception($"Error getting table name: {ex.Message}");
             }
 
             // Check if table already exists
-            if (TableExists(tableName))
-            {
+            if (TableExists(tableName)) {
                 throw new System.Exception($"Table {tableName} already exists.");
             }
 
             // Get the column definitions from the entity type
-            try
-            {
+            try {
                 columnsDefinition = ColumnDefinitionsFromEntity(entity);
             }
-            catch (System.Exception ex)
-            {
+            catch (System.Exception ex) {
                 _logger.LogError(ex, "Error getting column definitions for table {TableName}.", tableName);
                 throw new System.Exception($"Error getting column definitions: {ex.Message}");
             }
 
             // Create the create table query
-            try
-            {
+            try {
                 createTableQuery = CreateTableQuery(tableName, columnsDefinition);
             }
-            catch (System.Exception ex)
-            {
+            catch (System.Exception ex) {
                 _logger.LogError(ex, "Error creating table query for table {TableName}.", tableName);
                 throw new System.Exception("Error creating table query.");
             }
 
             // Finally, execute the create table query
-            try
-            {
+            try {
                 _sqlService.ExecuteCommand(createTableQuery);
             }
-            catch (System.Exception ex)
-            {
+            catch (System.Exception ex) {
                 _logger.LogError(ex, "Error creating table {TableName}.", tableName);
                 throw new System.Exception($"Error creating table {tableName}: {ex.Message}");
             }
         }
 
-        public void AddRecord(string tableName, T record)
-        {
+        public void AddRecord(string tableName, T record) {
             tableName = ValidateAndFormatTableName(tableName);
 
             var columns = string.Join(", ", record.GetType().GetProperties().Select(p => ValidateAndFormatColumnName(p.Name)));
             var values = string.Join(", ", record.GetType().GetProperties().Select(p => $"@{p.Name}"));
             var insertQuery = $"INSERT INTO {tableName} ({columns}) VALUES ({values})";
 
-            try
-            {
+            try {
                 _sqlService.ExecuteCommand(insertQuery, record);
             }
-            catch (System.Exception ex)
-            {
+            catch (System.Exception ex) {
                 _logger.LogError(ex, "Error adding record to table {TableName}.", tableName);
                 throw new System.Exception($"Error adding record to table {tableName}: {ex.Message}");
             }
         }
 
-        public IEnumerable<T> GetAllRecords(string tableName)
-        {
+        public IEnumerable<T> GetAllRecords(string tableName) {
             tableName = ValidateAndFormatTableName(tableName);
             var selectQuery = $"SELECT * FROM {tableName}";
 
-            try
-            {
+            try {
                 return _sqlService.ExecuteQuery<T>(selectQuery);
             }
-            catch (System.Exception ex)
-            {
+            catch (System.Exception ex) {
                 _logger.LogError(ex, "Error retrieving records from table {TableName}.", tableName);
                 throw new System.Exception($"Error retrieving records from table {tableName}: {ex.Message}");
             }
         }
 
-        public T GetRecordById(string tableName, object id)
-        {
+        public T GetRecordById(string tableName, object id) {
             tableName = ValidateAndFormatTableName(tableName);
             var selectQuery = $"SELECT * FROM {tableName} WHERE {DefaultIdColumn} = @Id";
 
-            try
-            {
-                return _sqlService.ExecuteQuery<T>(selectQuery, new { Id = id }).FirstOrDefault();
+            try {
+                return _sqlService.ExecuteQuery<T>(selectQuery, new
+                {
+                    Id = id
+                }).FirstOrDefault();
             }
-            catch (System.Exception ex)
-            {
+            catch (System.Exception ex) {
                 _logger.LogError(ex, "Error retrieving record by ID from table {TableName}.", tableName);
                 throw new System.Exception($"Error retrieving record from table {tableName}: {ex.Message}");
             }
         }
 
-        public void UpdateRecord(string tableName, object id, T updatedValues)
-        {
+        public void UpdateRecord(string tableName, object id, T updatedValues) {
             tableName = ValidateAndFormatTableName(tableName);
 
             // Get the properties of the updatedValues object
@@ -159,28 +137,26 @@ namespace Daw.DB.Data.Services
             // Create the update query
             var updateQuery = $"UPDATE {tableName} SET {setClause} WHERE {DefaultIdColumn} = @Id";
 
-            try
-            {
+            try {
                 _sqlService.ExecuteCommand(updateQuery, updatedValues);
             }
-            catch (System.Exception ex)
-            {
+            catch (System.Exception ex) {
                 _logger.LogError(ex, "Error updating record in table {TableName}.", tableName);
                 throw new System.Exception($"Error updating record in table {tableName}: {ex.Message}");
             }
         }
 
-        public void DeleteRecord(string tableName, object id)
-        {
+        public void DeleteRecord(string tableName, object id) {
             tableName = ValidateAndFormatTableName(tableName);
             var deleteQuery = $"DELETE FROM {tableName} WHERE {DefaultIdColumn} = @Id";
 
-            try
-            {
-                _sqlService.ExecuteCommand(deleteQuery, new { Id = id });
+            try {
+                _sqlService.ExecuteCommand(deleteQuery, new
+                {
+                    Id = id
+                });
             }
-            catch (System.Exception ex)
-            {
+            catch (System.Exception ex) {
                 _logger.LogError(ex, "Error deleting record from table {TableName}.", tableName);
                 throw new System.Exception($"Error deleting record from table {tableName}: {ex.Message}");
             }
@@ -193,20 +169,16 @@ namespace Daw.DB.Data.Services
         /// <param name="columnsDefinition"></param>
         /// <returns></returns>
         /// <exception cref="System.Exception"></exception>
-        private static string CreateTableQuery(string tableName, string columnsDefinition)
-        {
-            if (string.IsNullOrEmpty(tableName))
-            {
+        private static string CreateTableQuery(string tableName, string columnsDefinition) {
+            if (string.IsNullOrEmpty(tableName)) {
                 throw new System.Exception("Table name is empty.");
             }
 
-            if (string.IsNullOrEmpty(columnsDefinition))
-            {
+            if (string.IsNullOrEmpty(columnsDefinition)) {
                 throw new System.Exception("Columns definition is empty.");
             }
 
-            if (columnsDefinition.Contains(DefaultIdColumn))
-            {
+            if (columnsDefinition.Contains(DefaultIdColumn)) {
                 throw new System.Exception($"Columns definition contains {DefaultIdColumn}. This is a reserved keyword.");
             }
 
@@ -218,20 +190,16 @@ namespace Daw.DB.Data.Services
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        private static string ColumnDefinitionsFromEntity(T entity)
-        {
-            if (entity == null)
-            {
+        private static string ColumnDefinitionsFromEntity(T entity) {
+            if (entity == null) {
                 throw new System.Exception("Entity is null.");
             }
 
-            if (entity.GetType().GetProperties().Length == 0)
-            {
+            if (entity.GetType().GetProperties().Length == 0) {
                 throw new System.Exception("Entity has no properties.");
             }
 
-            if (entity.GetType().GetProperties().Any(p => p.Name == DefaultIdColumn))
-            {
+            if (entity.GetType().GetProperties().Any(p => p.Name == DefaultIdColumn)) {
                 throw new System.Exception($"Entity has a property named {DefaultIdColumn}. This is a reserved keyword.");
             }
 
@@ -249,11 +217,13 @@ namespace Daw.DB.Data.Services
         }
 
 
-        private bool TableExists(string tableName)
-        {
+        private bool TableExists(string tableName) {
             tableName = ValidateAndFormatTableName(tableName);
             string tableExistsQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name = @TableName;";
-            bool tableExists = _sqlService.ExecuteQuery(tableExistsQuery, new { TableName = tableName }).Any();
+            bool tableExists = _sqlService.ExecuteQuery(tableExistsQuery, new
+            {
+                TableName = tableName
+            }).Any();
             return tableExists;
         }
 
@@ -263,11 +233,9 @@ namespace Daw.DB.Data.Services
         /// <param name="entity"></param>
         /// <returns></returns>
         /// <exception cref="System.Exception"></exception>
-        private static string GetTableName(T entity)
-        {
+        private static string GetTableName(T entity) {
             var tableName = entity.GetType().Name;
-            if (string.IsNullOrEmpty(tableName))
-            {
+            if (string.IsNullOrEmpty(tableName)) {
                 throw new System.Exception("Entity type name is empty.");
             }
 
@@ -280,8 +248,7 @@ namespace Daw.DB.Data.Services
         /// <param name="type"></param>
         /// <returns></returns>
         /// <exception cref="NotSupportedException"></exception>
-        private static string GetSqliteType(Type type)
-        {
+        private static string GetSqliteType(Type type) {
             if (type == typeof(int) || type == typeof(long))
                 return "INTEGER";
             if (type == typeof(string))
@@ -301,10 +268,8 @@ namespace Daw.DB.Data.Services
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
-        private static string ValidateAndFormatTableName(string tableName)
-        {
-            if (!Regex.IsMatch(tableName, @"^[a-zA-Z0-9_]+$"))
-            {
+        private static string ValidateAndFormatTableName(string tableName) {
+            if (!Regex.IsMatch(tableName, @"^[a-zA-Z0-9_]+$")) {
                 throw new ArgumentException("Invalid table name.");
             }
             return tableName;
@@ -315,10 +280,8 @@ namespace Daw.DB.Data.Services
         /// </summary>
         /// <param name="columnName"></param>
         /// <returns></returns>
-        private static string ValidateAndFormatColumnName(string columnName)
-        {
-            if (!Regex.IsMatch(columnName, @"^[a-zA-Z0-9_]+$"))
-            {
+        private static string ValidateAndFormatColumnName(string columnName) {
+            if (!Regex.IsMatch(columnName, @"^[a-zA-Z0-9_]+$")) {
                 throw new ArgumentException("Invalid column name.");
             }
             return columnName;

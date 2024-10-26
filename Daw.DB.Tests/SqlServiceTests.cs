@@ -8,19 +8,16 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 
-namespace Daw.DB.Tests
-{
+namespace Daw.DB.Tests {
     [TestClass]
-    public class SqlServiceTests
-    {
+    public class SqlServiceTests {
         private ISqlService _sqlService;
         private IDatabaseContext _databaseContext;
 
         private string _databaseFilePath;
 
         [TestInitialize]
-        public void Setup()
-        {
+        public void Setup() {
             // Load configuration from appsettings.json
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -41,28 +38,23 @@ namespace Daw.DB.Tests
         }
 
         [TestCleanup]
-        public void Cleanup()
-        {
+        public void Cleanup() {
             // Ensure all connections are closed before cleanup
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            if (File.Exists(_databaseFilePath))
-            {
-                try
-                {
+            if (File.Exists(_databaseFilePath)) {
+                try {
                     File.Delete(_databaseFilePath);
                 }
-                catch (IOException ex)
-                {
+                catch (IOException ex) {
                     Console.WriteLine($"Failed to delete the file {_databaseFilePath}: {ex.Message}");
                 }
             }
         }
 
         [TestMethod]
-        public void CreateTable_Success()
-        {
+        public void CreateTable_Success() {
             // Arrange
             string sqlCreateTable = "CREATE TABLE TestTable (Name TEXT)";
             _sqlService.ExecuteCommand(sqlCreateTable);
@@ -76,8 +68,7 @@ namespace Daw.DB.Tests
 
         [TestMethod]
         [ExpectedException(typeof(SQLiteException))]
-        public void WrongSql_Failure()
-        {
+        public void WrongSql_Failure() {
             // Arrange: Incorrect SQL syntax to create a table
             string sql = "CREATE TABLES TestTable (Name TEXT)";
 
@@ -88,8 +79,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void InsertData_Success()
-        {
+        public void InsertData_Success() {
             // Arrange
             string sqlCreateTable = "CREATE TABLE TestTable (Name TEXT)";
             _sqlService.ExecuteCommand(sqlCreateTable);
@@ -103,8 +93,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void ExecuteInTransaction_Success()
-        {
+        public void ExecuteInTransaction_Success() {
             // Arrange
             string sqlCreateTable = "CREATE TABLE TestTable (Name TEXT)";
             _sqlService.ExecuteCommand(sqlCreateTable);
@@ -125,8 +114,7 @@ namespace Daw.DB.Tests
 
         [TestMethod]
         [ExpectedException(typeof(Exception))]
-        public void ExecuteInTransaction_Failure()
-        {
+        public void ExecuteInTransaction_Failure() {
             // Arrange
             string sqlCreateTable = "CREATE TABLE TestTable (Name TEXT)";
             _sqlService.ExecuteCommand(sqlCreateTable);

@@ -1,46 +1,39 @@
-using Daw.DB.Data;
 using Daw.DB.Data.APIs;
 using Daw.DB.Data.Services;
 using Grasshopper.Kernel;
 using System;
 
-namespace Daw.DB.GH
-{
-    public class GhcCreateDatabase : GH_Component
-    {
+namespace Daw.DB.GH {
+    public class GhcCreateDatabase : GH_Component {
         private readonly IGhClientApi _ghClientApi;
         private readonly IDatabaseContext _databaseContext;
 
         public GhcCreateDatabase()
             : base("Create Database", "CreateDB",
                 "Creates and initializes a database",
-                "Daw.DB", "CREATE")
-        {
+                "Daw.DB", "CREATE") {
             // Use the ApiFactory to get pre-configured instances
             _ghClientApi = ApiFactory.GetGhClientApi();
             _databaseContext = ApiFactory.GetDatabaseContext();
         }
 
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager) {
             pManager.AddBooleanParameter("Create", "C", "Boolean to trigger database creation", GH_ParamAccess.item);
         }
 
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
-        {
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) {
             pManager.AddTextParameter("Result", "R", "Result of the database operation", GH_ParamAccess.item);
         }
 
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
+        protected override void SolveInstance(IGH_DataAccess DA) {
             bool createDatabase = false;
 
             // Retrieve input data
-            if (!DA.GetData(0, ref createDatabase)) return;
+            if (!DA.GetData(0, ref createDatabase))
+                return;
 
 
-            if (createDatabase)
-            {
+            if (createDatabase) {
                 string result = CreateAndInitializeDatabase();
 
                 // Output the result of the database operation
@@ -49,23 +42,19 @@ namespace Daw.DB.GH
         }
 
         // Wrapper method
-        private string CreateAndInitializeDatabase()
-        {
+        private string CreateAndInitializeDatabase() {
 
-            try
-            {
+            try {
                 // Use the GhClientApi to create the connection
                 string creationResult = _ghClientApi.CreateConnection();
 
-                if (!creationResult.Contains("successfully"))
-                {
+                if (!creationResult.Contains("successfully")) {
                     return creationResult;
                 }
 
                 return $"Database created and initialized at {_databaseContext.ConnectionString}";
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 return $"Error creating and initializing database: {ex.Message}";
             }
         }

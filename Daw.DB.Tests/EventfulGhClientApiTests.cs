@@ -7,19 +7,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Daw.DB.Tests
-{
+namespace Daw.DB.Tests {
     [TestClass]
-    public class EventfulGhClientApiTests
-    {
+    public class EventfulGhClientApiTests {
         private IEventfulGhClientApi _eventfulGhClientApi;
         private IDatabaseContext _databaseContext;
         private string _databaseFilePath;
         private bool _eventRaised;
 
         [TestInitialize]
-        public void Setup()
-        {
+        public void Setup() {
             // Load configuration from appsettings.json
             var configuration = new ConfigurationBuilder()
                 // Adjust the base path as needed
@@ -41,28 +38,23 @@ namespace Daw.DB.Tests
         }
 
         [TestCleanup]
-        public void Cleanup()
-        {
+        public void Cleanup() {
             // Ensure all connections are closed before cleanup
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            if (File.Exists(_databaseFilePath))
-            {
-                try
-                {
+            if (File.Exists(_databaseFilePath)) {
+                try {
                     File.Delete(_databaseFilePath);
                 }
-                catch (IOException ex)
-                {
+                catch (IOException ex) {
                     Console.WriteLine($"Failed to delete the file {_databaseFilePath}: {ex.Message}");
                 }
             }
         }
 
         [TestMethod]
-        public void AddDictionaryRecord_ShouldRaiseTableChangedEvent()
-        {
+        public void AddDictionaryRecord_ShouldRaiseTableChangedEvent() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -89,17 +81,14 @@ namespace Daw.DB.Tests
             _eventfulGhClientApi.UnsubscribeFromTableChanges(OnTableChanged);
         }
 
-        private void OnTableChanged(object sender, TableChangedEventArgs args)
-        {
-            if (args.TableName == "TestTable" && args.Operation == "AddRecord")
-            {
+        private void OnTableChanged(object sender, TableChangedEventArgs args) {
+            if (args.TableName == "TestTable" && args.Operation == "AddRecord") {
                 _eventRaised = true;
             }
         }
 
         [TestMethod]
-        public void UpdateDictionaryRecord_ShouldRaiseTableChangedEvent()
-        {
+        public void UpdateDictionaryRecord_ShouldRaiseTableChangedEvent() {
             // Arrange
             _eventRaised = false;
             string tableName = "TestTable";
@@ -134,17 +123,14 @@ namespace Daw.DB.Tests
             _eventfulGhClientApi.UnsubscribeFromTableChanges(OnTableChangedUpdate);
         }
 
-        private void OnTableChangedUpdate(object sender, TableChangedEventArgs args)
-        {
-            if (args.TableName == "TestTable" && args.Operation == "UpdateRecord")
-            {
+        private void OnTableChangedUpdate(object sender, TableChangedEventArgs args) {
+            if (args.TableName == "TestTable" && args.Operation == "UpdateRecord") {
                 _eventRaised = true;
             }
         }
 
         [TestMethod]
-        public void DeleteRecord_ShouldRaiseTableChangedEvent()
-        {
+        public void DeleteRecord_ShouldRaiseTableChangedEvent() {
             // Arrange
             _eventRaised = false;
             string tableName = "TestTable";
@@ -174,17 +160,14 @@ namespace Daw.DB.Tests
             _eventfulGhClientApi.UnsubscribeFromTableChanges(OnTableChangedDelete);
         }
 
-        private void OnTableChangedDelete(object sender, TableChangedEventArgs args)
-        {
-            if (args.TableName == "TestTable" && args.Operation == "DeleteRecord")
-            {
+        private void OnTableChangedDelete(object sender, TableChangedEventArgs args) {
+            if (args.TableName == "TestTable" && args.Operation == "DeleteRecord") {
                 _eventRaised = true;
             }
         }
 
         [TestMethod]
-        public void MultipleOperations_ShouldRaiseCorrectEvents()
-        {
+        public void MultipleOperations_ShouldRaiseCorrectEvents() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -208,18 +191,14 @@ namespace Daw.DB.Tests
                 { "Name", "UpdatedName" }
             };
 
-            void OnTableChangedMultiple(object sender, TableChangedEventArgs args)
-            {
-                if (args.TableName == tableName && args.Operation == "AddRecord")
-                {
+            void OnTableChangedMultiple(object sender, TableChangedEventArgs args) {
+                if (args.TableName == tableName && args.Operation == "AddRecord") {
                     addEventRaised = true;
                 }
-                if (args.TableName == tableName && args.Operation == "UpdateRecord")
-                {
+                if (args.TableName == tableName && args.Operation == "UpdateRecord") {
                     updateEventRaised = true;
                 }
-                if (args.TableName == tableName && args.Operation == "DeleteRecord")
-                {
+                if (args.TableName == tableName && args.Operation == "DeleteRecord") {
                     deleteEventRaised = true;
                 }
             }
@@ -241,8 +220,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void UnsubscribeFromTableChanges_ShouldNotRaiseEvents()
-        {
+        public void UnsubscribeFromTableChanges_ShouldNotRaiseEvents() {
             // Arrange
             _eventRaised = false;
             string tableName = "TestTable";
@@ -258,8 +236,7 @@ namespace Daw.DB.Tests
                 { "Name", "TestName" }
             };
 
-            void handler(object sender, TableChangedEventArgs args)
-            {
+            void handler(object sender, TableChangedEventArgs args) {
                 _eventRaised = true;
             }
 
@@ -274,8 +251,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void AddDictionaryRecordInTransaction_ShouldRaiseSingleEvent()
-        {
+        public void AddDictionaryRecordInTransaction_ShouldRaiseSingleEvent() {
             // Arrange
             _eventRaised = false;
             string tableName = "TestTable";
@@ -304,17 +280,14 @@ namespace Daw.DB.Tests
             _eventfulGhClientApi.UnsubscribeFromTableChanges(OnTableChangedTransaction);
         }
 
-        private void OnTableChangedTransaction(object sender, TableChangedEventArgs args)
-        {
-            if (args.TableName == "TestTable" && args.Operation == "AddRecordsInTransaction")
-            {
+        private void OnTableChangedTransaction(object sender, TableChangedEventArgs args) {
+            if (args.TableName == "TestTable" && args.Operation == "AddRecordsInTransaction") {
                 _eventRaised = true;
             }
         }
 
         [TestMethod]
-        public void ReadOperations_ShouldNotRaiseEvents()
-        {
+        public void ReadOperations_ShouldNotRaiseEvents() {
             // Arrange
             _eventRaised = false;
             string tableName = "TestTable";

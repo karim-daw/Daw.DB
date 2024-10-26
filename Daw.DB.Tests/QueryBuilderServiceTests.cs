@@ -3,22 +3,18 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 
-namespace Daw.DB.Tests
-{
+namespace Daw.DB.Tests {
     [TestClass]
-    public class QueryBuilderServiceTests
-    {
+    public class QueryBuilderServiceTests {
         private IQueryBuilderService _queryBuilderService;
 
         [TestInitialize]
-        public void Setup()
-        {
+        public void Setup() {
             _queryBuilderService = new QueryBuilderService();
         }
 
         [TestMethod]
-        public void BuildCreateTableQuery_ShouldCreateCorrectQuery_WhenColumnsProvided()
-        {
+        public void BuildCreateTableQuery_ShouldCreateCorrectQuery_WhenColumnsProvided() {
             // Arrange
             var tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -36,8 +32,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildCreateTableQuery_ShouldAddIdColumn_WhenNotProvided()
-        {
+        public void BuildCreateTableQuery_ShouldAddIdColumn_WhenNotProvided() {
             // Arrange
             var tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -54,8 +49,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildCheckTableExistsQuery_ShouldReturnCorrectQuery()
-        {
+        public void BuildCheckTableExistsQuery_ShouldReturnCorrectQuery() {
             // Arrange
             var tableName = "TestTable";
 
@@ -68,8 +62,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildInsertQuery_ShouldCreateCorrectInsertQuery_WhenRecordProvided()
-        {
+        public void BuildInsertQuery_ShouldCreateCorrectInsertQuery_WhenRecordProvided() {
             // Arrange
             var tableName = "TestTable";
             var record = new Dictionary<string, object>
@@ -87,8 +80,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildBatchInsertQuery_ShouldCreateCorrectBatchInsertQuery_WhenRecordsProvided()
-        {
+        public void BuildBatchInsertQuery_ShouldCreateCorrectBatchInsertQuery_WhenRecordsProvided() {
             // Arrange
             var tableName = "TestTable";
             var records = new List<Dictionary<string, object>>
@@ -111,8 +103,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildBatchInsertQuery_ShouldThrowException_WhenNoRecordsProvided()
-        {
+        public void BuildBatchInsertQuery_ShouldThrowException_WhenNoRecordsProvided() {
             // Arrange
             var tableName = "TestTable";
             var records = new List<Dictionary<string, object>>();
@@ -122,8 +113,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildUpdateQuery_ShouldCreateCorrectUpdateQuery_WhenUpdatedValuesProvided()
-        {
+        public void BuildUpdateQuery_ShouldCreateCorrectUpdateQuery_WhenUpdatedValuesProvided() {
             // Arrange
             var tableName = "TestTable";
             var updatedValues = new Dictionary<string, object>
@@ -141,8 +131,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildSelectQuery_ShouldCreateCorrectSelectQuery_WhenNoWhereClauseProvided()
-        {
+        public void BuildSelectQuery_ShouldCreateCorrectSelectQuery_WhenNoWhereClauseProvided() {
             // Arrange
             var tableName = "TestTable";
 
@@ -155,8 +144,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildSelectQuery_ShouldCreateCorrectSelectQuery_WhenWhereClauseProvided()
-        {
+        public void BuildSelectQuery_ShouldCreateCorrectSelectQuery_WhenWhereClauseProvided() {
             // Arrange
             var tableName = "TestTable";
             var whereClause = "Age > 30";
@@ -170,8 +158,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildDeleteQuery_ShouldCreateCorrectDeleteQuery()
-        {
+        public void BuildDeleteQuery_ShouldCreateCorrectDeleteQuery() {
             // Arrange
             var tableName = "TestTable";
 
@@ -184,8 +171,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildDeleteTableQuery_ShouldCreateCorrectDeleteTableQuery()
-        {
+        public void BuildDeleteTableQuery_ShouldCreateCorrectDeleteTableQuery() {
             // Arrange
             var tableName = "TestTable";
 
@@ -198,8 +184,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildGetAllTableNamesQuery_ShouldReturnCorrectQuery()
-        {
+        public void BuildGetAllTableNamesQuery_ShouldReturnCorrectQuery() {
             // Act
             var result = _queryBuilderService.BuildGetAllTableNamesQuery();
 
@@ -209,8 +194,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildUpdateQuery_ShouldThrowException_WhenNoUpdatedValuesProvided()
-        {
+        public void BuildUpdateQuery_ShouldThrowException_WhenNoUpdatedValuesProvided() {
             // Arrange
             var tableName = "TestTable";
             var updatedValues = new Dictionary<string, object>();
@@ -220,8 +204,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void BuildDeleteQuery_ShouldThrowException_WhenTableNameIsNullOrEmpty()
-        {
+        public void BuildDeleteQuery_ShouldThrowException_WhenTableNameIsNullOrEmpty() {
             // Arrange
             var tableName = "";
 

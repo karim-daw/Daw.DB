@@ -8,18 +8,15 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 
-namespace Daw.DB.Tests
-{
+namespace Daw.DB.Tests {
     [TestClass]
-    public class DictionaryHandlerTests
-    {
+    public class DictionaryHandlerTests {
         private IDictionaryHandler _dictionaryHandler;
         private IDatabaseContext _databaseContext;
         private string _databaseFilePath;
 
         [TestInitialize]
-        public void Setup()
-        {
+        public void Setup() {
             // Load configuration from appsettings.json
             var configuration = new ConfigurationBuilder()
                 // Adjust the base path as needed
@@ -40,28 +37,23 @@ namespace Daw.DB.Tests
         }
 
         [TestCleanup]
-        public void Cleanup()
-        {
+        public void Cleanup() {
             // Ensure all connections are closed before cleanup
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            if (File.Exists(_databaseFilePath))
-            {
-                try
-                {
+            if (File.Exists(_databaseFilePath)) {
+                try {
                     File.Delete(_databaseFilePath);
                 }
-                catch (IOException ex)
-                {
+                catch (IOException ex) {
                     Console.WriteLine($"Failed to delete the file {_databaseFilePath}: {ex.Message}");
                 }
             }
         }
 
         [TestMethod]
-        public void CreateTable_NewTable_CreatesTableSuccessfully()
-        {
+        public void CreateTable_NewTable_CreatesTableSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -73,14 +65,12 @@ namespace Daw.DB.Tests
             _dictionaryHandler.CreateTable(tableName, columns);
 
             // Assert
-            using (var connection = new SQLiteConnection(_databaseContext.ConnectionString))
-            {
+            using (var connection = new SQLiteConnection(_databaseContext.ConnectionString)) {
                 connection.Open();
                 var query = $"PRAGMA table_info({tableName})";
                 var command = connection.CreateCommand();
                 command.CommandText = query;
-                using (var reader = command.ExecuteReader())
-                {
+                using (var reader = command.ExecuteReader()) {
                     Assert.IsTrue(reader.HasRows);
                 }
             }
@@ -88,8 +78,7 @@ namespace Daw.DB.Tests
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
-        public void CreateTable_ExistingTable_ThrowsException()
-        {
+        public void CreateTable_ExistingTable_ThrowsException() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -106,8 +95,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void AddRecord_ValidRecord_AddsRecordSuccessfully()
-        {
+        public void AddRecord_ValidRecord_AddsRecordSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -132,8 +120,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void GetRecordById_ValidId_ReturnsRecord()
-        {
+        public void GetRecordById_ValidId_ReturnsRecord() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -159,8 +146,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void UpdateRecord_ValidUpdate_UpdatesRecordSuccessfully()
-        {
+        public void UpdateRecord_ValidUpdate_UpdatesRecordSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>
@@ -192,8 +178,7 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void DeleteRecord_ValidId_DeletesRecordSuccessfully()
-        {
+        public void DeleteRecord_ValidId_DeletesRecordSuccessfully() {
             // Arrange
             string tableName = "TestTable";
             var columns = new Dictionary<string, string>

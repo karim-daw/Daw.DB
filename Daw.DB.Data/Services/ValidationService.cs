@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace Daw.DB.Data.Services
-{
-    public interface IValidationService
-    {
+namespace Daw.DB.Data.Services {
+    public interface IValidationService {
         /// <summary>
         /// Validates the table name by checking if it contains only alphanumeric characters and underscores.
         /// </summary>
@@ -38,14 +36,11 @@ namespace Daw.DB.Data.Services
         void ValidateRecordAgainstColumns(Dictionary<string, object> record, Dictionary<string, string> columnMetadata); // New method for validating record against columns and their types
     }
 
-    public class ValidationService : IValidationService
-    {
+    public class ValidationService : IValidationService {
         private static readonly HashSet<string> ValidSqlTypes = new HashSet<string> { "INTEGER", "TEXT", "REAL", "BLOB", "NUMERIC" };
 
-        public void ValidateTableName(string tableName)
-        {
-            if (!Regex.IsMatch(tableName, @"^[a-zA-Z0-9_]+$"))
-            {
+        public void ValidateTableName(string tableName) {
+            if (!Regex.IsMatch(tableName, @"^[a-zA-Z0-9_]+$")) {
                 throw new ArgumentException("Invalid table name.");
             }
         }
@@ -55,68 +50,52 @@ namespace Daw.DB.Data.Services
         /// </summary>
         /// <param name="columns"></param>
         /// <exception cref="ArgumentException"></exception>
-        public void ValidateColumns(Dictionary<string, string> columns)
-        {
-            foreach (var column in columns)
-            {
-                if (!Regex.IsMatch(column.Key, @"^[a-zA-Z0-9_]+$"))
-                {
+        public void ValidateColumns(Dictionary<string, string> columns) {
+            foreach (var column in columns) {
+                if (!Regex.IsMatch(column.Key, @"^[a-zA-Z0-9_]+$")) {
                     throw new ArgumentException($"Invalid column name: {column.Key}");
                 }
-                if (!IsValidSqlType(column.Value))
-                {
+                if (!IsValidSqlType(column.Value)) {
                     throw new ArgumentException($"Invalid column type: {column.Value}");
                 }
             }
         }
 
-        public void ValidateRecord(Dictionary<string, object> record)
-        {
-            foreach (var key in record.Keys)
-            {
-                if (!Regex.IsMatch(key, @"^[a-zA-Z0-9_]+$"))
-                {
+        public void ValidateRecord(Dictionary<string, object> record) {
+            foreach (var key in record.Keys) {
+                if (!Regex.IsMatch(key, @"^[a-zA-Z0-9_]+$")) {
                     throw new ArgumentException($"Invalid column name in record: {key}");
                 }
             }
         }
 
-        public void ValidateId(object id)
-        {
-            if (id == null)
-            {
+        public void ValidateId(object id) {
+            if (id == null) {
                 throw new ArgumentException("Id cannot be null.");
             }
         }
 
-        public void ValidateRecordAgainstColumns(Dictionary<string, object> record, Dictionary<string, string> columnMetadata)
-        {
-            foreach (var key in record.Keys)
-            {
-                if (!columnMetadata.ContainsKey(key))
-                {
+        public void ValidateRecordAgainstColumns(Dictionary<string, object> record, Dictionary<string, string> columnMetadata) {
+            foreach (var key in record.Keys) {
+                if (!columnMetadata.ContainsKey(key)) {
                     throw new ArgumentException($"Invalid column name {key} in record.");
                 }
 
                 var expectedType = columnMetadata[key];
                 var value = record[key];
 
-                if (!ValidateType(expectedType, value))
-                {
+                if (!ValidateType(expectedType, value)) {
                     throw new ArgumentException($"Invalid data type for column {key}: Expected {expectedType} but got {value?.GetType().Name}");
                 }
             }
         }
 
-        private bool ValidateType(string expectedType, object value)
-        {
-            if (value == null)
-            {
+        private bool ValidateType(string expectedType, object value) {
+            if (value == null) {
                 return true; // Assuming NULL is allowed in the column
             }
 
-            switch (expectedType.ToUpperInvariant())
-            {
+            switch (expectedType.ToUpperInvariant()) {
                 case "INTEGER":
                     return value is int || value is long;
                 case "REAL":
@@ -132,8 +111,7 @@ namespace Daw.DB.Data.Services
             }
         }
 
-        private bool IsValidSqlType(string type)
-        {
+        private bool IsValidSqlType(string type) {
             return ValidSqlTypes.Contains(type.ToUpper());
         }
     }

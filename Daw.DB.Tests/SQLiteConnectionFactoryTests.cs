@@ -7,11 +7,9 @@ using System.Data;
 using System.Data.SQLite;
 using System.IO;
 
-namespace Daw.DB.Tests
-{
+namespace Daw.DB.Tests {
     [TestClass]
-    public class SQLiteConnectionFactoryTests
-    {
+    public class SQLiteConnectionFactoryTests {
         private ISQLiteConnectionFactory _factory;
         private IDatabaseContext _databaseContext;
 
@@ -19,8 +17,7 @@ namespace Daw.DB.Tests
         private string _connectionString;
 
         [TestInitialize]
-        public void Setup()
-        {
+        public void Setup() {
             // Build configuration
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -46,20 +43,16 @@ namespace Daw.DB.Tests
         }
 
         [TestCleanup]
-        public void Cleanup()
-        {
+        public void Cleanup() {
             _factory = null;
             _databaseContext = null;
 
             // Delete the temp file
-            if (File.Exists(_databaseFilePath))
-            {
-                try
-                {
+            if (File.Exists(_databaseFilePath)) {
+                try {
                     File.Delete(_databaseFilePath);
                 }
-                catch (IOException ex)
-                {
+                catch (IOException ex) {
                     Console.WriteLine($"Failed to delete the file {_databaseFilePath}: {ex.Message}");
                 }
             }
@@ -68,8 +61,7 @@ namespace Daw.DB.Tests
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
-        public void TestCreateConnection_NullOrEmptyConnectionString_ThrowsException()
-        {
+        public void TestCreateConnection_NullOrEmptyConnectionString_ThrowsException() {
             string invalidConnectionString = null;
 
             // set the connection string in the database context
@@ -81,11 +73,9 @@ namespace Daw.DB.Tests
 
 
         [TestMethod]
-        public void TestCreateConnection_ValidConnectionString_ReturnsSQLiteConnection()
-        {
+        public void TestCreateConnection_ValidConnectionString_ReturnsSQLiteConnection() {
             // Act
-            using (var connection = _factory.CreateConnection())
-            {
+            using (var connection = _factory.CreateConnection()) {
                 // Assert
                 Assert.IsNotNull(connection);
                 Assert.IsInstanceOfType(connection, typeof(IDbConnection));
@@ -95,16 +85,14 @@ namespace Daw.DB.Tests
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
-        public void TestCreateConnectionFromFilePath_NullOrEmptyPath_ThrowsException()
-        {
+        public void TestCreateConnectionFromFilePath_NullOrEmptyPath_ThrowsException() {
             // Act
             _factory.CreateConnectionFromFilePath(null);
         }
 
         [TestMethod]
         [ExpectedException(typeof(FileNotFoundException))]
-        public void TestCreateConnectionFromFilePath_FileNotFound_ThrowsException()
-        {
+        public void TestCreateConnectionFromFilePath_FileNotFound_ThrowsException() {
             // Arrange
             string invalidFilePath = "invalid_path.db";
 
@@ -113,18 +101,15 @@ namespace Daw.DB.Tests
         }
 
         [TestMethod]
-        public void TestCreateConnectionFromFilePath_ValidPath_ReturnsSQLiteConnection()
-        {
+        public void TestCreateConnectionFromFilePath_ValidPath_ReturnsSQLiteConnection() {
             // Arrange
             // Ensure the file exists
-            if (!File.Exists(_databaseFilePath))
-            {
+            if (!File.Exists(_databaseFilePath)) {
                 SQLiteConnection.CreateFile(_databaseFilePath);
             }
 
             // Act
-            using (var connection = _factory.CreateConnectionFromFilePath(_databaseFilePath))
-            {
+            using (var connection = _factory.CreateConnectionFromFilePath(_databaseFilePath)) {
                 // Assert
                 Assert.IsNotNull(connection);
                 Assert.IsInstanceOfType(connection, typeof(IDbConnection));
@@ -135,8 +120,7 @@ namespace Daw.DB.Tests
         // test ping
         [TestMethod]
 
-        public void TestPing_ValidConnection_ReturnsTrue()
-        {
+        public void TestPing_ValidConnection_ReturnsTrue() {
             // Act
             Assert.IsTrue(_factory.Ping(_connectionString));
 
@@ -144,8 +128,7 @@ namespace Daw.DB.Tests
 
         // assert that false is returned for any exception
         [TestMethod]
-        public void TestPing_ExceptionThrown_ReturnsFalse()
-        {
+        public void TestPing_ExceptionThrown_ReturnsFalse() {
             // Arrange
             string invalidConnectionString = "invalid_connection_string";
 
